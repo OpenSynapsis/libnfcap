@@ -62,8 +62,11 @@ static inline void nfcap_protobuf_wrapper_insert_packet(
     pb_pkt->mutable_time()->set_seconds(pkt->rts.tv_sec);
     pb_pkt->mutable_time()->set_nanos(pkt->rts.tv_usec * 1000);
 
-    if (pkt->direction == 1) { // Default direction is CLIENT_TO_SERVER
-        pb_pkt->set_direction(nfcap::protobuf::NFcapPacketDirection::SERVER_TO_CLIENT);
+    if (pkt->direction == 0) { // Default direction is CLIENT_TO_SERVER
+        pb_pkt->set_direction(nfcap::protobuf::NFcapPacketDirection::DIRECTION_CLIENT_TO_SERVER);
+    } else if (pkt->direction == 1) { // Inverted direction is SERVER_TO_CLIENT
+        pb_pkt->set_direction(nfcap::protobuf::NFcapPacketDirection::DIRECTION_SERVER_TO_CLIENT);
+
     }
 
     pb_pkt->set_payload_length(pkt->plen);

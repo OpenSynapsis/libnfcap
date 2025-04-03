@@ -41,10 +41,40 @@ int nfcap_file_close(FILE *file) {
     return 0;
 }
 
-int nfcap_file_write(FILE *file, const char *buffer, size_t size) {
+/* Create a new nfcap file with the specified filename
+* and write the header to it. The file is opened in binary mode.
+* Returns 0 on success, -1 on failure.
+* The caller is responsible for closing the file.
+*/
+int nfcap_file_create_new(const char *filename, FILE **file) {
+    if (nfcap_file_open(filename, file, "wb") != 0) {
+        return -1;
+    }
+    nfcap_file_header_t header = {0};
+    header.version_major = 0;
+    header.version_minor = 1;
+    header.reserved = 0;
+    header.record_count = 0;
+
+    if (fwrite(&header, sizeof(header), 1, *file) != 1) {
+        nfcap_file_close(*file);
+        return -1;
+    }
+    return 0;
+}
+
+int nfcap_file_append_record(FILE *file, const char *buffer, size_t size) {
     if (file == NULL || buffer == NULL) {
         return -1;
     }
+
+    // Write the record header
+    nfcap_file_record_t record_header = {0};
+    record_header.length = size;
+    if (fwrite(&record_header, sizeof(record_header), 1, file) != 1) {
+        return -1;
+    }
+
     size_t written = fwrite(buffer, 1, size, file);
     if (written != size) {
         return -1;

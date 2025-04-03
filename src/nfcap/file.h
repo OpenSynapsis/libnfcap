@@ -27,10 +27,28 @@
 #define FILE_H
 
 #include <stdio.h>
+#include <stdint.h>
+
+typedef struct nfcap_file_header nfcap_file_header_t;
+struct nfcap_file_header {
+    uint8_t version_major; // Major version of the file format
+    uint8_t version_minor; // Minor version of the file format
+    uint16_t reserved; // Version of the file format
+
+    uint32_t record_count; // Number of records in the file
+} __attribute__((packed));
+
+typedef struct nfcap_file_record nfcap_file_record_t;
+struct nfcap_file_record {
+    uint32_t length; // Length of the record
+} __attribute__((packed));
 
 int nfcap_file_open(const char *filename, FILE **file, const char *mode);
 int nfcap_file_close(FILE *file);
-int nfcap_file_write(FILE *file, const char *buffer, size_t size);
+
+int nfcap_file_create_new(const char *filename, FILE **file);
+int nfcap_file_append_record(FILE *file, const char *buffer, size_t size);
+
 int nfcap_file_read(FILE *file, char *buffer, size_t size);
 
 #endif // FILE_H

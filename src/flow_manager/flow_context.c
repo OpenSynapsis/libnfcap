@@ -85,7 +85,7 @@ int nfcap_flow_context_update_state(nfcap_flow_context_t *flow_context) {
     }
 }
 
-void nfcap_flow_context_dump(nfcap_flow_context_t *flow_context) {
+void nfcap_flow_context_dump(nfcap_flow_context_t *flow_context, FILE* file) {
     printf("Flow: ");
     nfcap_flow_key_print(&flow_context->key);
     printf("Start time: %ld.%06ld\n", flow_context->start_time.tv_sec, flow_context->start_time.tv_usec);
@@ -114,13 +114,7 @@ void nfcap_flow_context_dump(nfcap_flow_context_t *flow_context) {
         return;
     }
 
-    FILE *file = NULL;
-    if (nfcap_file_open("flow_dump.nfcap", &file, "wb") == 0) {
-        nfcap_file_write(file, serialized_flow_context, serialized_flow_context_size);
-        nfcap_file_close(file);
-    } else {
-        perror("Failed to open file");
-    }
+    nfcap_file_append_record(file, serialized_flow_context, serialized_flow_context_size);
 
     printf("Serialized flow context size: %zu bytes\n", serialized_flow_context_size);
     free(serialized_flow_context);

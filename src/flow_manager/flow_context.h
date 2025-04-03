@@ -27,6 +27,7 @@
 #define FLOW_CONTEXT_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include <sys/time.h>
 #include <flow_manager/flow_key.h>
 
@@ -94,7 +95,7 @@ int nfcap_flow_context_destroy(nfcap_flow_context_t *flow_context);
 
 int nfcap_flow_context_insert_packet(nfcap_flow_context_t *flow_context, nfcap_pkthdr_t *pkt);
 
-void nfcap_flow_context_dump(nfcap_flow_context_t *flow_context);
+void nfcap_flow_context_dump(nfcap_flow_context_t *flow_context, FILE* file);
 
 int nfcap_flow_context_update_state(nfcap_flow_context_t *flow_context);
 

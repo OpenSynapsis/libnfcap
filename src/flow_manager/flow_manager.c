@@ -35,6 +35,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <nfcap/file.h>
+
 int nfcap_flow_manager_init(nfcap_flow_manager_t *flow_manager) {
     flow_manager->hashtable = calloc(1, sizeof(nfcap_flow_hashtable_t));
     nfcap_flow_hashtable_init(flow_manager->hashtable, 1 << 8); // 256 buckets
@@ -250,10 +252,15 @@ static void nfcap_flow_manager_metrics_print(nfcap_flow_manager_t *flow_manager)
 int nfcap_flow_manager_dump(nfcap_flow_manager_t *flow_manager) {
     uint32_t size;
     nfcap_flow_context_t **fc = nfcap_flow_hashtable_to_array(flow_manager->hashtable, &size);
+
+    char *filename = "flow_manager_dump.nfcap";
+    FILE *nfcap_file;
+    nfcap_file_create_new(filename, &nfcap_file);
+
     METRICS_MEASURE_CPU_TIME_INIT;
     METRICS_MEASURE_CPU_TIME(
         for (uint32_t i = 0; i < size; i++) {
-            nfcap_flow_context_dump(fc[i]);
+            nfcap_flow_context_dump(fc[i], nfcap_file);
             nfcap_flow_list_append(flow_manager->flow_list, fc[i]);
         },
         flow_manager->metrics.cpu_time_list_insert
