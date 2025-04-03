@@ -1,0 +1,46 @@
+{
+    "File License Header": {
+        "prefix": "License",
+        "body": [
+            "/*",
+            " * Project: @PROJECT_NAME@",
+            " * File: ${TM_FILENAME}",
+            " *",
+            " * Description: @PROJECT_DESCRIPTION@",
+            " *",
+            " * Copyright (C) ${CURRENT_YEAR} @PROJECT_AUTHOR@",
+            " *",
+            " * This program is free software: you can redistribute it and/or modify",
+            " * it under the terms of the GNU General Public License as published by",
+            " * the Free Software Foundation, either version 3 of the License, or",
+            " * (at your option) any later version.",
+            " *",
+            " * This program is distributed in the hope that it will be useful,",
+            " * but WITHOUT ANY WARRANTY; without even the implied warranty of",
+            " * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the",
+            " * GNU General Public License for more details.",
+            " *",
+            " * You should have received a copy of the GNU General Public License",
+            " * along with this program. If not, see <https://www.gnu.org/licenses/>.",
+            " *",
+			" * Author: @PROJECT_AUTHOR@ ",
+            " * Contact: <@PROJECT_AUTHOR_EMAIL@>",
+            " */",
+            "",
+            "${0}"
+        ],
+        "description": "Insert a GNU GPL license header"
+    },
+    "Header File": {
+        "prefix": "Header",
+        "body": [
+            "#ifndef ${TM_FILENAME_BASE/(.*)/${1:/upcase}/}_H",
+            "#define ${TM_FILENAME_BASE/(.*)/${1:/upcase}/}_H",
+            "",
+            "${0}",
+            "",
+            "#endif // ${TM_FILENAME_BASE/(.*)/${1:/upcase}/}_H"
+        ],
+        "description": "Insert a header file guard"
+    }
+}
