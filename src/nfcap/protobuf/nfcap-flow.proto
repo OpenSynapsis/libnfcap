@@ -1,0 +1,55 @@
+/*
+ * Project: nfcap
+ * File: nfcap-flow.proto
+ *
+ * Description: Flow-oriented network capture library
+ *
+ * Copyright (C) 2025 Gabin Noblet
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Author: Gabin Noblet 
+ * Contact: <gabin.noblet@gmail.com>
+ */
+
+
+syntax = "proto3";
+package nfcap.protobuf;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+import "nfcap-packet.proto";
+import "nfcap-ip.proto";
+import "nfcap-ipv6.proto";
+import "nfcap-tcp.proto";
+import "nfcap-udp.proto";
+
+message NFcapFlow {
+    google.protobuf.Timestamp start_time = 1;
+    google.protobuf.Duration duration = 2;
+
+    
+    oneof l3 {
+        nfcap.protobuf.NFcapIP ip = 3;
+        nfcap.protobuf.NFcapIPv6 ipv6 = 4;
+    }
+
+    oneof l4 {
+        nfcap.protobuf.NFcapTCP tcp = 5;
+        nfcap.protobuf.NFcapUDP udp = 6;
+    }
+
+    repeated nfcap.protobuf.NFcapPacket packets = 127;
+}

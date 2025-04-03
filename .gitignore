@@ -1,0 +1,17 @@
+# Ignore build
+build*
+
+# Ignore binaries
+bin/
+
+# Ignore lib files
+lib/
+
+# Ignore vscode files
+.vscode/
+
+# Ignore dump files
+*.nfcap
+
+# Ignore config files
+nfcap/config.h
