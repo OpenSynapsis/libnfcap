@@ -29,8 +29,9 @@ package nfcap.protobuf;
 import "google/protobuf/timestamp.proto";
 
 enum NFcapPacketDirection {
-    CLIENT_TO_SERVER = 0;
-    SERVER_TO_CLIENT = 1;
+    DIRECTION_UNSPECIFIED = 0;
+    DIRECTION_CLIENT_TO_SERVER = 1;
+    DIRECTION_SERVER_TO_CLIENT = 2;
 }
 
 message NFcapPacket {
