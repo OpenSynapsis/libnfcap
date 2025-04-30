@@ -88,18 +88,18 @@ int nfcap_flow_context_update_state(nfcap_flow_context_t *flow_context) {
 
 size_t nfcap_flow_context_dump(nfcap_flow_context_t *flow_context, FILE* file) {
     size_t serialized_flow_context_size = 0;
-    printf("Flow: ");
+    //printf("Flow: ");
     
     //if (flow_context->key.protocol == IPPROTO_UDP) {
-    nfcap_flow_key_print(&flow_context->key);
+    //nfcap_flow_key_print(&flow_context->key);
     //}
-    printf("Start time: %ld.%06ld\n", flow_context->start_time.tv_sec, flow_context->start_time.tv_usec);
-    printf("Label: 0\n");
-    int count = 0;
-    for (nfcap_pkthdr_t *pkt = flow_context->pkt_list; pkt != NULL; pkt = pkt->next) {
-        printf("\t[#%02d] ", ++count);
-        nfcap_pkthdr_print(pkt);
-    }
+    //printf("Start time: %ld.%06ld\n", flow_context->start_time.tv_sec, flow_context->start_time.tv_usec);
+    //printf("Label: 0\n");
+    //int count = 0;
+    //for (nfcap_pkthdr_t *pkt = flow_context->pkt_list; pkt != NULL; pkt = pkt->next) {
+    //    printf("\t[#%02d] ", ++count);
+    //    nfcap_pkthdr_print(pkt);
+    //}
 
     // printf("\n");
 
@@ -118,7 +118,6 @@ size_t nfcap_flow_context_dump(nfcap_flow_context_t *flow_context, FILE* file) {
 
         nfcap_file_append_record(file, serialized_flow_context, serialized_flow_context_size);
 
-        //printf("Serialized flow context size: %zu bytes\n", serialized_flow_context_size);
         free(serialized_flow_context);
     }
 
