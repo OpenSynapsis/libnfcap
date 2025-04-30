@@ -95,6 +95,6 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char
     
 
     if (ret != 0) {
-        fprintf(stderr, "Error: nfcap_flow_manager_packet_handler failed [%d]\n", ret);
+        //fprintf(stderr, "Error: nfcap_flow_manager_packet_handler failed [%d]\n", ret);
     }
 }
