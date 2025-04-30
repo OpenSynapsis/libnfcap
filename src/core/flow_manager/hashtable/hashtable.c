@@ -23,7 +23,7 @@
  * Contact: <gabin.noblet@gmail.com>
  */
 
-#include <flow_manager/flow_hashtable.h>
+#include <core/flow_manager/hashtable/hashtable.h>
 
 #include <stdlib.h>
 #include <string.h>

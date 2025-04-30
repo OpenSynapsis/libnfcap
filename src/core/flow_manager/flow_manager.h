@@ -33,8 +33,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <pcap.h>
-#include <flow_manager/flow_hashtable.h>
-#include <flow_manager/flow_list.h>
+#include <core/flow_manager/hashtable/hashtable.h>
+#include <core/flow_manager/flow_list.h>
 
 typedef struct nfcap_flow_manager_metrics nfcap_flow_manager_metrics_t;
 struct nfcap_flow_manager_metrics {
@@ -69,6 +69,9 @@ struct nfcap_flow_manager_metrics {
 
     uint64_t total_bytes;
     uint64_t total_read_bytes;
+
+    uint32_t dup_packet_count;
+    size_t written_nfcap_size;
 };
 
 typedef struct nfcap_flow_manager nfcap_flow_manager_t;
@@ -76,11 +79,16 @@ struct nfcap_flow_manager {
     nfcap_flow_hashtable_t *hashtable;
     nfcap_flow_list_t *flow_list;
 
+    int datalink_type;
+
     double cpu_time_per_packet;
     uint32_t packet_count;
 
     nfcap_flow_manager_metrics_t metrics;
     FILE *input_file;
+    char *output_filename;
+    int dup_time_window;
+    int dup_packet_window;
 };
 
 int nfcap_flow_manager_init(nfcap_flow_manager_t *flow_manager);

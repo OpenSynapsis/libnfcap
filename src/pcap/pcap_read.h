@@ -28,6 +28,6 @@
 
 #include <pcap.h>
 
-int read_pcap_file(char* filename);
+int read_pcap_file(char* filename, char* output_filename, int dup_time_window, int dup_packet_window);
 
 #endif // PCAP_READ_H

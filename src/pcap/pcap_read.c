@@ -25,12 +25,12 @@
 
 #include <pcap/pcap_read.h>
 #include <pcap/packet_handler.h>
-#include <flow_manager/flow_manager.h>
+#include <core/flow_manager/flow_manager.h>
 #include <nfcap_types.h>
 
 #include <stdlib.h>
 
-int read_pcap_file(char* filename) {
+int read_pcap_file(char* filename, char* output_filename, int dup_time_window, int dup_packet_window) {
     pcap_t *pcap;
     char errbuf[PCAP_ERRBUF_SIZE];
     struct pcap_pkthdr header;
@@ -49,17 +49,27 @@ int read_pcap_file(char* filename) {
         return -1;
     }
 
-
     datalink = pcap_datalink(pcap);
-    if (datalink != DLT_EN10MB) {
-        fprintf(stderr, "Error: Unsupported datalink type, type=%d\n", datalink);
+    if (datalink != DLT_EN10MB && datalink != DLT_LINUX_SLL) {
+        fprintf(stderr, "Error: Unsupported datalink type, type=%d toto\n", datalink);
         return -1;
     }
 
     nfcap_flow_manager_t *flow_manager = calloc(1, sizeof(nfcap_flow_manager_t));
     nfcap_flow_manager_init(flow_manager);
+    flow_manager->datalink_type = datalink;
     flow_manager->metrics.total_bytes = file_size;
     flow_manager->input_file = file;
+    flow_manager->output_filename = output_filename;
+
+    if (dup_time_window == 0) {
+        dup_time_window = 500;
+    }
+    if (dup_packet_window == 0) {
+        dup_packet_window = 1;
+    }
+    flow_manager->dup_time_window = dup_time_window;
+    flow_manager->dup_packet_window = dup_packet_window;
     
     ret = pcap_dispatch(pcap, 0, packet_handler, (u_char *) flow_manager);
     if (ret < 0) {
@@ -69,10 +79,6 @@ int read_pcap_file(char* filename) {
     }
 
     nfcap_flow_manager_dump(flow_manager);
-
-    printf("Processed %d packets\n", ret);
-    printf("Flow manager size: %d\n", flow_manager->hashtable->size);
-    printf("Flow manager capacity: %d\n", flow_manager->hashtable->capacity);
 
     pcap_close(pcap);
 

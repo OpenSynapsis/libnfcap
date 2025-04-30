@@ -23,8 +23,9 @@
  * Contact: <gabin.noblet@gmail.com>
  */
 
-#include <flow_manager/flow_manager.h>
-#include <flow_manager/flow_key.h>
+#include <core/flow_manager/flow_manager.h>
+#include <core/flow/flow_context.h>
+#include <modules/deduplication/duplicates.h>
 
 #include <proto/ethernet.h>
 #include <proto/ipv4.h>
@@ -125,17 +126,9 @@ int nfcap_flow_manager_packet_handler(
     nfcap_pkthdr_t *pkt = calloc(1, sizeof(nfcap_pkthdr_t));
 
     METRICS_MEASURE_CPU_TIME(
-        ret = nfcap_pkthdr_create(pkt, header, packet, &key),
+        ret = nfcap_pkthdr_create(pkt, flow_manager->datalink_type, header, packet, &key),
         flow_manager->metrics.cpu_time_pkthdr_create
     );
-
-    if (key.protocol == IPPROTO_UDP) {
-        flow_manager->metrics.udp_packet_count++;
-    } else if (key.protocol == IPPROTO_TCP) {
-        flow_manager->metrics.tcp_packet_count++;
-    } else {
-        flow_manager->metrics.other_packet_count++;
-    }
 
     if (ret != 0) {
         return FLOW_MANAGER_PROTOCOL_NOT_SUPPORTED;
@@ -177,6 +170,7 @@ int nfcap_flow_manager_packet_handler(
         flow_manager->metrics.tcp_checker_count++;
         if (pkt->flags == TCP_SYN && flow_context->pkt_count > 0) {
             if (flow_context->init_seq != pkt->tcp_seq_num) {
+                flow_manager->metrics.dup_packet_count += nfcap_flow_manager_remove_duplicates(flow_context, flow_manager->dup_time_window, flow_manager->dup_packet_window);
                 METRICS_MEASURE_CPU_TIME(
                     nfcap_flow_list_append(flow_manager->flow_list, flow_context),
                     flow_manager->metrics.cpu_time_list_insert
@@ -206,6 +200,16 @@ int nfcap_flow_manager_packet_handler(
     
     flow_context->pkt_last_time = header->ts;
     flow_manager->packet_count++;
+
+    if (key.protocol == IPPROTO_UDP) {
+        flow_manager->metrics.udp_packet_count++;
+    } else if (key.protocol == IPPROTO_TCP) {
+        flow_manager->metrics.tcp_packet_count++;
+    } else {
+        flow_manager->metrics.other_packet_count++;
+        printf("Unknown protocol: %d\n", key.protocol);
+    }
+
     flow_manager->metrics.cpu_time_total_2 += (double)(end2 - start2) / 1000; // ms
     return 0;
 }
@@ -216,6 +220,7 @@ static void nfcap_flow_manager_metrics_print(nfcap_flow_manager_t *flow_manager)
     printf("TCP flow count: %d\n", flow_manager->metrics.tcp_flow_count);
     printf("UDP flow count: %d\n", flow_manager->metrics.udp_flow_count);
     printf("\n");
+
     printf("Flow expired: %d\n", flow_manager->metrics.flow_expired);
     printf("CPU time total: %.2fms [%.2fµs/pkt]\n", flow_manager->metrics.cpu_time_total,
         (flow_manager->metrics.cpu_time_total * 1000) / flow_manager->packet_count);
@@ -247,24 +252,84 @@ static void nfcap_flow_manager_metrics_print(nfcap_flow_manager_t *flow_manager)
     printf("Flow list size: %d\n", flow_manager->flow_list->size);
     printf("CPU time list insert: %.2fms [%.2f µs/ins]\n", flow_manager->metrics.cpu_time_list_insert,
         (flow_manager->metrics.cpu_time_list_insert * 1000) / flow_manager->flow_list->size);
+
+    printf("Processed %d packets, found %d duplicates within %d µs time window and %d pkts\n", 
+        flow_manager->packet_count, 
+        flow_manager->metrics.dup_packet_count, 
+        flow_manager->dup_time_window, 
+        flow_manager->dup_packet_window);
+    printf("Written nfcap size: %lu bytes\n", flow_manager->metrics.written_nfcap_size);
+    printf("\n");
+}
+
+int export_percent_active = 0;
+
+void
+print_progress_export(size_t count, size_t max)
+{
+	const char suffix[] = "]";
+	const size_t suffix_length = sizeof(suffix) - 1;
+	
+	const size_t prefix_length = 13;
+    char *prefix = calloc(prefix_length + 1, sizeof(char));
+    sprintf(prefix, "Export: %3d%%[", (int)(count * 100 / max));
+
+	char *buffer = calloc(max + prefix_length + suffix_length + 1, 1); // +1 for \0
+	size_t i = 0;
+
+	strcpy(buffer, prefix);
+	for (; i < max; ++i)
+	{
+		buffer[prefix_length + i] = i < count ? '=' : ' ';
+	}
+    buffer[prefix_length + count] = '>';
+
+	strcpy(&buffer[prefix_length + i], suffix);
+	printf("%s\r", buffer);
+
+    if (count == max) {
+        printf("\n");
+    }
+
+	fflush(stdout);
+	free(buffer);
+    free(prefix);
 }
 
 int nfcap_flow_manager_dump(nfcap_flow_manager_t *flow_manager) {
     uint32_t size;
     nfcap_flow_context_t **fc = nfcap_flow_hashtable_to_array(flow_manager->hashtable, &size);
 
-    char *filename = "flow_manager_dump.nfcap";
-    FILE *nfcap_file;
-    nfcap_file_create_new(filename, &nfcap_file);
+    printf("Flow list size: %d\n", flow_manager->flow_list->size);
+    printf("Flow hashtable size: %d\n", flow_manager->hashtable->capacity);
+    printf("Flow hashtable count: %d\n", flow_manager->hashtable->size);
 
+    //char *filename = "flow_manager_dump.nfcap";
+
+    FILE *nfcap_file = NULL;
+    size_t written_bytes = 0;
+    if (flow_manager->output_filename != NULL) {
+        nfcap_file_create_new(flow_manager->output_filename, &nfcap_file);
+    }
+    
     METRICS_MEASURE_CPU_TIME_INIT;
     METRICS_MEASURE_CPU_TIME(
         for (uint32_t i = 0; i < size; i++) {
-            nfcap_flow_context_dump(fc[i], nfcap_file);
+            flow_manager->metrics.dup_packet_count += nfcap_flow_manager_remove_duplicates(fc[i], flow_manager->dup_time_window, flow_manager->dup_packet_window);
+            written_bytes += nfcap_flow_context_dump(fc[i], nfcap_file);
             nfcap_flow_list_append(flow_manager->flow_list, fc[i]);
+            
+            uint8_t percent = (100 * i) / size;
+            
+            if (percent > export_percent_active) {
+                export_percent_active = percent;
+                print_progress_export(percent / 2, 50);
+            }
         },
         flow_manager->metrics.cpu_time_list_insert
     );
+
+    flow_manager->metrics.written_nfcap_size += written_bytes;
     nfcap_flow_manager_metrics_print(flow_manager);
 
     return 0;

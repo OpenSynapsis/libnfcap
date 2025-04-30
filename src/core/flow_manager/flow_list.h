@@ -1,6 +1,6 @@
 /*
- * Project: LibNFCap
- * File: main.c
+ * Project: nfcap
+ * File: flow_list.h
  *
  * Description: Flow-oriented network capture library
  *
@@ -23,17 +23,31 @@
  * Contact: <gabin.noblet@gmail.com>
  */
 
+#ifndef FLOW_LIST_H
+#define FLOW_LIST_H
+
+#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include "parse_args.h"
 
-#include <nfcap.h>
+#include <core/flow/flow_context.h>
 
-int main(int argc, char* argv[]) {
-    struct nfcap_args *opts = calloc(1, sizeof(struct nfcap_args));
-    parse_args(argc, argv, opts);
 
-    read_pcap_file(opts->input_filename, opts->output_filename, opts->dup_time_window, opts->dup_packet_window);
+typedef struct nfcap_flow_list nfcap_flow_list_t;
+struct nfcap_flow_list {
+    uint32_t size;
 
-    return 0;
-}
+    nfcap_flow_context_t *head;
+    nfcap_flow_context_t *tail;
+    nfcap_flow_context_t *current;
+};
+
+int nfcap_flow_list_init(nfcap_flow_list_t *flow_list);
+int nfcap_flow_list_destroy(nfcap_flow_list_t *flow_list);
+
+int nfcap_flow_list_append(nfcap_flow_list_t *flow_list, nfcap_flow_context_t *flow_context);
+int nfcap_flow_list_insert_sorted(nfcap_flow_list_t *flow_list, nfcap_flow_context_t *flow_context);
+
+void nfcap_flow_list_print(nfcap_flow_list_t *flow_list);
+    
+
+#endif // FLOW_LIST_H

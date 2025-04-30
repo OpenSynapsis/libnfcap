@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/time.h>
-#include <flow_manager/flow_key.h>
+#include <core/flow/flow_key.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,7 +37,7 @@ extern "C" {
 
 typedef struct nfcap_flow_context nfcap_flow_context_t;
 
-#include <flow_manager/packet_record.h>
+#include <core/packet/packet_record.h>
 
 enum nfcap_flow_state {
     NFCAP_FLOW_STATE_CON_UNKNOWN = 0,
@@ -84,6 +84,7 @@ struct nfcap_flow_context {
     nfcap_flow_context_t *prev;
 
     uint32_t init_seq;
+    uint32_t dup_packet_count;
 };
 
 #ifdef __cplusplus
@@ -95,7 +96,7 @@ int nfcap_flow_context_destroy(nfcap_flow_context_t *flow_context);
 
 int nfcap_flow_context_insert_packet(nfcap_flow_context_t *flow_context, nfcap_pkthdr_t *pkt);
 
-void nfcap_flow_context_dump(nfcap_flow_context_t *flow_context, FILE* file);
+size_t nfcap_flow_context_dump(nfcap_flow_context_t *flow_context, FILE* file);
 
 int nfcap_flow_context_update_state(nfcap_flow_context_t *flow_context);
 

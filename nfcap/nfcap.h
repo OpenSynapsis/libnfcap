@@ -47,6 +47,6 @@ struct nfcap {
     int count;
 };
 
-int read_pcap_file(char* filename);
+int read_pcap_file(char* filename, char* output_filename, int dup_time_window, int dup_packet_window);
 
 #endif // NFCAP_H

@@ -1,6 +1,6 @@
 /*
  * Project: nfcap
- * File: flow_list.h
+ * File: dlt_ssl.c
  *
  * Description: Flow-oriented network capture library
  *
@@ -23,31 +23,19 @@
  * Contact: <gabin.noblet@gmail.com>
  */
 
-#ifndef FLOW_LIST_H
-#define FLOW_LIST_H
+#include <proto/dlt_ssl.h>
 
-#include <stdint.h>
+#include <netinet/in.h>
+
 #include <stdio.h>
 
-#include <flow_manager/flow_context.h>
-
-
-typedef struct nfcap_flow_list nfcap_flow_list_t;
-struct nfcap_flow_list {
-    uint32_t size;
-
-    nfcap_flow_context_t *head;
-    nfcap_flow_context_t *tail;
-    nfcap_flow_context_t *current;
-};
-
-int nfcap_flow_list_init(nfcap_flow_list_t *flow_list);
-int nfcap_flow_list_destroy(nfcap_flow_list_t *flow_list);
-
-int nfcap_flow_list_append(nfcap_flow_list_t *flow_list, nfcap_flow_context_t *flow_context);
-int nfcap_flow_list_insert_sorted(nfcap_flow_list_t *flow_list, nfcap_flow_context_t *flow_context);
-
-void nfcap_flow_list_print(nfcap_flow_list_t *flow_list);
+dlt_ssl_hdr_t* nfcap_proto_unpack_dlt_ssl(const u_char *packet, size_t *offset) {
+    dlt_ssl_hdr_t *dlt_ssl_hdr;
+    dlt_ssl_hdr = (dlt_ssl_hdr_t *) (packet);// + *offset);
     
+    uint8_t addr_len = ntohs(dlt_ssl_hdr->ssl_link_layer_address_length);
+    *offset += DLT_SSL_STATIC_LENGTH + addr_len;
 
-#endif // FLOW_LIST_H
+    return dlt_ssl_hdr;
+}
+    

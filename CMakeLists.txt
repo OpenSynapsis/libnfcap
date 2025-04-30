@@ -31,16 +31,17 @@ include_directories(src)
 file(GLOB_RECURSE SOURCES "src/*.c")
 # Add *.cc files to the list of sources
 
-message(STATUS "Sources: ${SOURCES}")
-
 # Compile protobuf files
 find_package(Protobuf REQUIRED)
 add_subdirectory(src/nfcap/protobuf)
 
+# Add openssl
+find_package(OpenSSL REQUIRED)
+
 
 # Add the library
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
-target_link_libraries(${PROJECT_NAME} nfcap_protobuf)
+target_link_libraries(${PROJECT_NAME} nfcap_protobuf OpenSSL::SSL)
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "nfcap/nfcap.h")

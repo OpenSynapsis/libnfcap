@@ -28,8 +28,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <flow_manager/flow_context.h>
-#include <flow_manager/flow_key.h>
+#include <core/flow/flow_context.h>
+#include <core/flow/flow_key.h>
 
 #define FLOW_HASHTABLE_NOT_FOUND 1
 #define FLOW_HASHTABLE_FULL 2 

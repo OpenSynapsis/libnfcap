@@ -28,7 +28,7 @@
 
 #include <stdint.h>
 #include <asm/byteorder.h>
-
+#include <netinet/ip6.h>
 #include <nfcap_types.h>
 
 typedef uint32_t ipv6_addr_t[4]; // IPv6 address

@@ -44,13 +44,13 @@ struct ipv4_hdr {
 #else
 #error "Please fix <asm/byteorder.h>"
 #endif
-    uint8_t tos;
+    uint8_t tos; // Mutable field
     uint16_t tot_len;
     uint16_t id;
-    uint16_t frag_off;
-    uint8_t ttl;
+    uint16_t frag_off; // Mutable field
+    uint8_t ttl; // Mutable field
     uint8_t protocol;
-    uint16_t check;
+    uint16_t check; // Mutable field
     uint32_t saddr;
     uint32_t daddr;
 } __attribute__ ((__packed__));

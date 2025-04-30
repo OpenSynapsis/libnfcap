@@ -26,7 +26,7 @@
 #ifndef WRAPPER_H
 #define WRAPPER_H
 
-#include <flow_manager/flow_context.h>
+#include <core/flow/flow_context.h>
 
 #ifdef __cplusplus
 extern "C" {

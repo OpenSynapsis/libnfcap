@@ -1,6 +1,6 @@
 /*
- * Project: LibNFCap
- * File: main.c
+ * Project: nfcap
+ * File: hash.h
  *
  * Description: Flow-oriented network capture library
  *
@@ -23,17 +23,18 @@
  * Contact: <gabin.noblet@gmail.com>
  */
 
-#include <stdio.h>
+#ifndef HASH_H
+#define HASH_H
+
+#include <stdint.h>
 #include <stdlib.h>
-#include "parse_args.h"
+#include <openssl/evp.h>
 
-#include <nfcap.h>
+#define NFCAP_HASH_TYPE EVP_sha256()
+#define NFCAP_HASH_SIZE EVP_MD_size(NFCAP_HASH_TYPE)
+#define NFCAP_HASH_STR_SIZE (NFCAP_HASH_SIZE * 2 + 1) // 1 for null terminator
+typedef uint8_t packet_hash_t[EVP_MAX_MD_SIZE];
+int nfcap_utils_hash(const uint8_t *data, size_t offset, size_t len, packet_hash_t hash);
+int nfcap_utils_hash_to_string(packet_hash_t hash, char *str);
 
-int main(int argc, char* argv[]) {
-    struct nfcap_args *opts = calloc(1, sizeof(struct nfcap_args));
-    parse_args(argc, argv, opts);
-
-    read_pcap_file(opts->input_filename, opts->output_filename, opts->dup_time_window, opts->dup_packet_window);
-
-    return 0;
-}
+#endif // HASH_H

@@ -1,6 +1,6 @@
 /*
- * Project: LibNFCap
- * File: main.c
+ * Project: nfcap
+ * File: duplicates.h
  *
  * Description: Flow-oriented network capture library
  *
@@ -23,17 +23,15 @@
  * Contact: <gabin.noblet@gmail.com>
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "parse_args.h"
+#ifndef DUPLICATES_H
+#define DUPLICATES_H
 
-#include <nfcap.h>
+#include <core/flow/flow_context.h>
 
-int main(int argc, char* argv[]) {
-    struct nfcap_args *opts = calloc(1, sizeof(struct nfcap_args));
-    parse_args(argc, argv, opts);
+int nfcap_flow_manager_remove_duplicates(
+    nfcap_flow_context_t *flow_context,
+    int dup_time_window,
+    int dup_packet_window
+);
 
-    read_pcap_file(opts->input_filename, opts->output_filename, opts->dup_time_window, opts->dup_packet_window);
-
-    return 0;
-}
+#endif // DUPLICATES_H
