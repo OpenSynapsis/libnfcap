@@ -23,8 +23,8 @@
  * Contact: <gabin.noblet@gmail.com>
  */
 
-#include <flow_manager/flow_key.h>
-#include <flow_manager/mmh3.h>
+#include <core/flow/flow_key.h>
+#include <core/flow_manager/hashtable/hash_functions/mmh3.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -163,18 +163,36 @@ uint32_t nfcap_flow_key_hash(const nfcap_flow_key_t *key, int attempt, int capac
 }
     
 void nfcap_flow_key_print(const nfcap_flow_key_t *key) {
-    if (key->ip_v == 6) {
-        nfcap_proto_ipv6_print((uint32_t *)key->ip_a);
-        printf(":%u -> ", key->port_a);
-        nfcap_proto_ipv6_print((uint32_t *)key->ip_b);
-        printf(":%u (%u)\n", key->port_b, key->protocol);
-        return;
-    } else if (key->ip_v == 4) {
-        nfcap_proto_ipv4_print(key->ip_a[0]);
-        printf(":%u -> ", key->port_a);
-        nfcap_proto_ipv4_print(key->ip_b[0]);
-        printf(":%u (%u)\n", key->port_b, key->protocol);
+    if (key->inverted) {
+        if (key->ip_v == 6) {
+            nfcap_proto_ipv6_print((uint32_t *)key->ip_b);
+            printf(":%u -> ", key->port_b);
+            nfcap_proto_ipv6_print((uint32_t *)key->ip_a);
+            printf(":%u (%u)\n", key->port_a, key->protocol);
+            return;
+        } else if (key->ip_v == 4) {
+            nfcap_proto_ipv4_print(key->ip_b[0]);
+            printf(":%u -> ", key->port_b);
+            nfcap_proto_ipv4_print(key->ip_a[0]);
+            printf(":%u (%u)\n", key->port_a, key->protocol);
+        } else {
+            printf("Invalid IP version: %u\n", key->ip_v);
+        }
     } else {
-        printf("Invalid IP version: %u\n", key->ip_v);
+        if (key->ip_v == 6) {
+            nfcap_proto_ipv6_print((uint32_t *)key->ip_a);
+            printf(":%u -> ", key->port_a);
+            nfcap_proto_ipv6_print((uint32_t *)key->ip_b);
+            printf(":%u (%u)\n", key->port_b, key->protocol);
+            return;
+        } else if (key->ip_v == 4) {
+            nfcap_proto_ipv4_print(key->ip_a[0]);
+            printf(":%u -> ", key->port_a);
+            nfcap_proto_ipv4_print(key->ip_b[0]);
+            printf(":%u (%u)\n", key->port_b, key->protocol);
+        } else {
+            printf("Invalid IP version: %u\n", key->ip_v);
+        }
     }
+    
 }

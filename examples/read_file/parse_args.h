@@ -30,6 +30,9 @@
 
 struct nfcap_args {
     char* input_filename;
+    char* output_filename;
+    int dup_time_window;
+    int dup_packet_window;
 };
 
 void parse_args(int argc, char **argv, struct nfcap_args *opts);

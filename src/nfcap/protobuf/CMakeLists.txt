@@ -4,18 +4,6 @@ if (NOT nfcap_protobuf)
     message(FATAL_ERROR "No .proto files found in ${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
 
-# Create directory for generated files
-#set(GENERATED_PROTO_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
-#file(MAKE_DIRECTORY ${GENERATED_PROTO_DIR})
-
-# Add a gitignore file to the generated directory
-#file(WRITE ${GENERATED_PROTO_DIR}/.gitignore "*")
-
-#include_directories(${Protobuf_INCLUDE_DIRS})
-#include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
-message(STATUS "Protobuf source files found: ${nfcap_protobuf}")
-
 # Generate the protobuf files
 foreach(PROTO_FILE ${nfcap_protobuf})
     protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS
@@ -24,8 +12,6 @@ foreach(PROTO_FILE ${nfcap_protobuf})
     # Add the generated files to the list of sources
     list(APPEND PROTO_SOURCES ${PROTO_SRCS})
 endforeach()
-
-message(STATUS "Generated protobuf files: ${PROTO_SOURCES}")
 
 file(GLOB_RECURSE WRAPPER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
 

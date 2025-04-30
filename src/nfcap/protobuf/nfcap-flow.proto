@@ -38,7 +38,7 @@ import "nfcap-udp.proto";
 
 message NFcapFlow {
     google.protobuf.Timestamp start_time = 1;
-    google.protobuf.Duration duration = 2;
+    uint32 label = 2;
 
     oneof l3 {
         nfcap.protobuf.NFcapIP ip = 3;

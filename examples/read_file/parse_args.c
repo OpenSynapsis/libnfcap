@@ -35,10 +35,13 @@ static struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"version", no_argument, 0, 'v'},
     {"read", required_argument, 0, 'r'},
+    {"write", required_argument, 0, 'w'},
+    {"dup-time-window", required_argument, 0, 'd'},
+    {"dup-packet-window", required_argument, 0, 'p'},
     {0, 0, 0, 0}
 };
 
-static char* short_options = "hvr:";
+static char* short_options = "hvr:w:d:p:";
 
 void print_usage(char *argv0) {
     printf("Usage: %s [OPTION]... [FILE]...\n", argv0);
@@ -47,6 +50,9 @@ void print_usage(char *argv0) {
     printf("  -h, --help     display this help and exit\n");
     printf("  -v, --version  output version information and exit\n");
     printf("  -r, --read     read a network packet capture file (.pcap|.pcapng)\n");
+    printf("  -w, --write    write a NetGlyph-Capture file (.nfcap)\n");
+    printf("  -d, --dup-time-window     set the duplicate time window (in seconds)\n");
+    printf("  -p, --dup-packet-window     set the duplicate packet window (in packets)\n");
 }
 
 void check_mandatory_opts(struct nfcap_args *opts) {
@@ -80,6 +86,23 @@ void parse_args(int argc, char **argv, struct nfcap_args *opts) {
                 exit(EXIT_SUCCESS);
             case 'r':
                 opts->input_filename = optarg;
+                break;
+            case 'w':
+                opts->output_filename = optarg;
+                break;
+            case 'd':
+                opts->dup_time_window = atoi(optarg);
+                if(opts->dup_time_window < 0) {
+                    fprintf(stderr, "Error: invalid value for --dup-time-window\n");
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            case 'p':
+                opts->dup_packet_window = atoi(optarg);
+                if(opts->dup_packet_window < 0) {
+                    fprintf(stderr, "Error: invalid value for --dup-packet-window\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case '?':
                 printf("\n");

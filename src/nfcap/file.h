@@ -28,14 +28,18 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 typedef struct nfcap_file_header nfcap_file_header_t;
 struct nfcap_file_header {
+    uint32_t magic; // RESERVED: Magic number to identify the file format 
+    
     uint8_t version_major; // Major version of the file format
     uint8_t version_minor; // Minor version of the file format
-    uint16_t reserved; // Version of the file format
+    uint16_t reserved; // RESERVED: Alignment on 4 bytes
 
     uint32_t record_count; // Number of records in the file
+    struct timeval start_time; // Start time of the capture
 } __attribute__((packed));
 
 typedef struct nfcap_file_record nfcap_file_record_t;

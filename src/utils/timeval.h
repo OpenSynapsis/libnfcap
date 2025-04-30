@@ -29,7 +29,7 @@
 #include <sys/time.h>
 
 
-int timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y);
+int timeval_subtract(struct timeval *result, struct timeval x, struct timeval y);
 float timeval_to_float(struct timeval *tv);
 void timeval_print(struct timeval *tv);
 

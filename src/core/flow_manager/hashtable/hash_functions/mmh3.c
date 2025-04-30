@@ -23,7 +23,7 @@
  * Contact: <gabin.noblet@gmail.com>
  */
 
-#include <flow_manager/mmh3.h>
+#include <core/flow_manager/hashtable/hash_functions/mmh3.h>
 #include <string.h>
 
 // Found at https://en.wikipedia.org/wiki/MurmurHash

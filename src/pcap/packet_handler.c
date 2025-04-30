@@ -25,9 +25,7 @@
 
 #include <pcap/packet_handler.h>
 #include <nfcap_types.h>
-#include <flow_manager/flow_key.h>
-#include <flow_manager/flow_manager.h>
-#include <flow_manager/mmh3.h>
+#include <core/flow_manager/flow_manager.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -96,7 +94,7 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char
     }
     
 
-    //if (ret != 0) {
-    //    fprintf(stderr, "Error: nfcap_flow_manager_packet_handler failed [%d]\n", ret);
-    //}
+    if (ret != 0) {
+        fprintf(stderr, "Error: nfcap_flow_manager_packet_handler failed [%d]\n", ret);
+    }
 }

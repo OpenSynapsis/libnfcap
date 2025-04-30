@@ -28,8 +28,10 @@
 
 typedef struct nfcap_pkthdr nfcap_pkthdr_t;
 
-#include <flow_manager/flow_context.h>
-#include <flow_manager/flow_key.h>
+#include <core/flow/flow_context.h>
+#include <core/flow/flow_key.h>
+
+#include <utils/hash.h>
 
 #include <stdint.h>
 #include <sys/time.h>
@@ -40,7 +42,7 @@ typedef struct nfcap_pkthdr nfcap_pkthdr_t;
 struct nfcap_pkthdr {
     struct timeval ts;  // Absolute timestamp
     struct timeval rts; // Relative timestamp
-    nfcap_pkthdr_t *next;
+
 
     int c_state;
     int s_state;
@@ -51,9 +53,13 @@ struct nfcap_pkthdr {
     uint32_t flags;
 
     uint32_t tcp_seq_num;
+    packet_hash_t hash;  
+    
+    nfcap_pkthdr_t *next;
+    nfcap_pkthdr_t *prev;
 };
 
-int nfcap_pkthdr_create(nfcap_pkthdr_t *nfcap_pkthdr, const struct pcap_pkthdr *header, const u_char* packet, nfcap_flow_key_t *key);
+int nfcap_pkthdr_create(nfcap_pkthdr_t *nfcap_pkthdr, int datalink, const struct pcap_pkthdr *header, const u_char* packet, nfcap_flow_key_t *key);
 int nfcap_pkthdr_update(nfcap_pkthdr_t *nfcap_pkthdr, nfcap_flow_key_t *key, nfcap_flow_context_t *flow_context);
 
 void nfcap_pkthdr_print(nfcap_pkthdr_t *nfcap_pkthdr);
