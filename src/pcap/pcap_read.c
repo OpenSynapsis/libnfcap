@@ -75,7 +75,6 @@ int read_pcap_file(char* filename, char* output_filename, int dup_time_window, i
     if (ret < 0) {
         fprintf(stderr, "Error: pcap_dispatch failed [%d]\n", ret);
         pcap_perror(pcap, "pcap_dispatch");
-        return -1;
     }
 
     nfcap_flow_manager_dump(flow_manager);

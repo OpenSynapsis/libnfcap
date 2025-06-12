@@ -304,8 +304,6 @@ int nfcap_flow_manager_dump(nfcap_flow_manager_t *flow_manager) {
     printf("Flow hashtable size: %d\n", flow_manager->hashtable->capacity);
     printf("Flow hashtable count: %d\n", flow_manager->hashtable->size);
 
-    //char *filename = "flow_manager_dump.nfcap";
-
     FILE *nfcap_file = NULL;
     size_t written_bytes = 0;
     if (flow_manager->output_filename != NULL) {
