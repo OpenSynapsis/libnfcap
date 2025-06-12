@@ -157,14 +157,14 @@ uint32_t nfcap_flow_key_hash(const nfcap_flow_key_t *key, int attempt, int capac
     offset += nfcap_flow_key_buffer_append(key_bytes + offset, &key->protocol, sizeof(uint8_t));
 
 
-    //uint32_t hash = murmur3_32(key_bytes, sizeof(uint32_t) * 8 + sizeof(uint16_t) * 2 + sizeof(uint8_t), 0);
-    uint64_t hash64;
-    uint8_t _key = {0x01};
-    siphash(key_bytes, sizeof(uint32_t) * 8 + sizeof(uint16_t) * 2 + sizeof(uint8_t), &_key, (uint8_t *)&hash64, 8);
+    uint32_t hash = murmur3_32(key_bytes, sizeof(uint32_t) * 8 + sizeof(uint16_t) * 2 + sizeof(uint8_t), 0);
+    //uint64_t hash64;
+    //uint8_t _key = {0x01};
+    //siphash(key_bytes, sizeof(uint32_t) * 8 + sizeof(uint16_t) * 2 + sizeof(uint8_t), &_key, (uint8_t *)&hash64, 8);
 
     free(key_bytes);
 
-    return (hash64 + attempt) % capacity;
+    return (hash + attempt) % capacity;
 }
     
 void nfcap_flow_key_print(const nfcap_flow_key_t *key) {
