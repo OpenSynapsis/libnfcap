@@ -70,6 +70,7 @@ static inline void nfcap_protobuf_wrapper_insert_packet(
     }
 
     pb_pkt->set_payload_length(pkt->plen);
+    pb_pkt->set_flags(pkt->flags);
 }
 
 int nfcap_protobuf_wrapper_create_flow_record(
