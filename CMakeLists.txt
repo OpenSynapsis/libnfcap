@@ -17,6 +17,9 @@ message(STATUS "Version: ${PROJECT_VERSION}-${PROJECT_VERSION_NAME}")
 
 project(${PROJECT_NAME} VERSION ${PROJECT_VERSION} DESCRIPTION ${PROJECT_DESCRIPTION} LANGUAGES C CXX)
 
+include(CTest)
+enable_testing()
+
 # Configure the vscode snippets with project information
 configure_file(templates/vscode.code-snippets.in ${CMAKE_SOURCE_DIR}/.vscode/${PROJECT_NAME}.code-snippets @ONLY)
 
@@ -51,3 +54,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAK
 
 # Examples
 add_subdirectory(examples)
+
+# Tests
+add_subdirectory(tests)
