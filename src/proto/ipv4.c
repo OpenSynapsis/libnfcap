@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: ipv4.c
  *
  * Description: Flow-oriented network capture library

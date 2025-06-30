@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(PROJECT_NAME "nfcap")
+set(PROJECT_NAME "libnfcap")
 set(PROJECT_DESCRIPTION "Flow-oriented network capture library")
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 1)

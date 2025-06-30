@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: dlt_ssl.h
  *
  * Description: Flow-oriented network capture library

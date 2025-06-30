@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: c-wrapper.c
  *
  * Description: Flow-oriented network capture library

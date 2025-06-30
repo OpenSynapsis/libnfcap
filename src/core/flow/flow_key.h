@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: flow_key.h
  *
  * Description: Flow-oriented network capture library

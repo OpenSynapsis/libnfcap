@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: ipv6.h
  *
  * Description: Flow-oriented network capture library

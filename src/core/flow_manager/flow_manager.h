@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: flow_manager.h
  *
  * Description: Flow-oriented network capture library

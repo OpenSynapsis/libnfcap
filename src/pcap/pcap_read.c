@@ -1,10 +1,10 @@
 /*
- * Project: NetGlyph-Probe
+ * Project: libnfcap
  * File: pcap_read.c
  *
- * Description: A software used to read network traffic into NetGlyph-Capture format (.ngcap)
+ * Description: Flow-oriented network capture library
  *
- * Copyright (C) 2024 Gabin Noblet
+ * Copyright (C) 2025 Gabin Noblet
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
