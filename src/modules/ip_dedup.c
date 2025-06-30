@@ -23,7 +23,7 @@
  * Contact: <gabin.noblet@gmail.com>
  */
 
-#include <modules/deduplication/duplicates.h>
+#include <modules/ip_dedup.h>
 #include <utils/hash.h>
 #include <utils/timeval.h>
 #include <string.h>

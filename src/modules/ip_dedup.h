@@ -23,8 +23,8 @@
  * Contact: <gabin.noblet@gmail.com>
  */
 
-#ifndef DUPLICATES_H
-#define DUPLICATES_H
+#ifndef IP_DEDUP_H
+#define IP_DEDUP_H
 
 #include <core/flow/flow_context.h>
 
@@ -34,4 +34,4 @@ int nfcap_flow_manager_remove_duplicates(
     int dup_packet_window
 );
 
-#endif // DUPLICATES_H
+#endif // IP_DEDUP_H
