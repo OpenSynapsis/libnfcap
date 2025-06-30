@@ -13,5 +13,10 @@ lib/
 # Ignore dump files
 *.nfcap
 
+# Ignore pcap files unless they are in the tests/pcap directory
+# (which is used for testing purposes)
+*.pcap
+!tests/pcap/*.pcap
+
 # Ignore config files
 nfcap/config.h
