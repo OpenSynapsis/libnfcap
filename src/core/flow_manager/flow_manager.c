@@ -24,6 +24,7 @@
  */
 
 #include <core/flow_manager/flow_manager.h>
+#include <core/flow_manager/hashtable.h>
 #include <core/flow/flow_context.h>
 #include <modules/ip_dedup.h>
 
@@ -39,17 +40,18 @@
 #include <nfcap/file.h>
 
 int nfcap_flow_manager_init(nfcap_flow_manager_t *flow_manager) {
-    flow_manager->hashtable = calloc(1, sizeof(nfcap_flow_hashtable_t));
-    nfcap_flow_hashtable_init(flow_manager->hashtable, 1 << 8); // 256 buckets
-
+    flow_manager->ht = hashtable_create(
+        1 << 8, // 256 buckets
+        (hashtable_equals_func_t)nfcap_flow_key_equals,
+        (hashtable_hash_func_t)nfcap_flow_key_hash
+    );
     flow_manager->ip_defrag = nfcap_ip_defrag_create();
 
     return 0;
 }
 
 int nfcap_flow_manager_destroy(nfcap_flow_manager_t *flow_manager) {
-    nfcap_flow_hashtable_destroy(flow_manager->hashtable);
-    free(flow_manager->hashtable);
+    hashtable_destroy(flow_manager->ht);
 
     nfcap_flow_context_t *flow_context = flow_manager->first_created_flow;
     nfcap_flow_context_t *next = NULL;
@@ -64,21 +66,6 @@ int nfcap_flow_manager_destroy(nfcap_flow_manager_t *flow_manager) {
     free(flow_manager);
 
     return 0;
-}
-
-static int nfcap_flow_manager_get_flow(
-    nfcap_flow_manager_t *flow_manager, 
-    nfcap_flow_context_t **flow_context, 
-    nfcap_flow_key_t *key,
-    double *cpu_time
-) {
-    int ret;
-    METRICS_MEASURE_CPU_TIME_INIT;
-    METRICS_MEASURE_CPU_TIME(
-        ret = nfcap_flow_hashtable_get_flow(flow_manager->hashtable, flow_context, key), 
-        *cpu_time
-    );
-    return ret;
 }
 
 static inline void nfcap_flow_manager_chain_flow(
@@ -100,21 +87,7 @@ static int nfcap_flow_manager_create_flow(
     nfcap_flow_context_t **flow_context, 
     nfcap_flow_key_t *key
 ) {
-    METRICS_MEASURE_CPU_TIME_INIT;
     int ret = 0;
-
-    float ratio = nfcap_flow_hashtable_fill_ratio(flow_manager->hashtable);
-    if (ratio > 0.90) {
-        METRICS_MEASURE_CPU_TIME(
-            ret = nfcap_flow_hashtable_resize(flow_manager->hashtable),
-            flow_manager->metrics.cpu_time_hashtable_resize
-        )
-    }
-
-    if (ret != 0) {
-        fprintf(stderr, "[-] flow-manager: Failed to resize hashtable (%d)\n", ret);
-        return ret;
-    }
 
     ret = nfcap_flow_context_create(flow_context, key);
     if (ret != 0) {
@@ -124,17 +97,6 @@ static int nfcap_flow_manager_create_flow(
 
     // Chain the flow context to the previous one
     nfcap_flow_manager_chain_flow(flow_manager, *flow_context);
-
-    METRICS_MEASURE_CPU_TIME(
-        ret = nfcap_flow_hashtable_insert_flow(flow_manager->hashtable, *flow_context, key),
-        flow_manager->metrics.cpu_time_hashtable_insert
-    );
-
-    if (ret != 0) {
-        fprintf(stderr, "[-] flow-manager: Failed to insert flow context in hashtable\n");
-        return ret;
-    }
-    flow_manager->metrics.hashtable_insert_count++;
 
     return 0;
 }
@@ -167,13 +129,13 @@ int nfcap_flow_manager_packet_handler(
         return FLOW_MANAGER_IP_FRAGMENT;
     }
 
-    nfcap_flow_key_hash(key);
+    METRICS_MEASURE_CPU_TIME(
+        hashtable_entry_t *entry = hashtable_get_entry(flow_manager->ht, key, sizeof(nfcap_flow_key_t)),
+        flow_manager->metrics.cpu_time_hashtable_lookup
+    )
+    nfcap_flow_context_t *flow_context = entry->data;
 
-    nfcap_flow_context_t *flow_context = NULL;
-    ret = nfcap_flow_manager_get_flow(flow_manager, &flow_context, key, &flow_manager->metrics.cpu_time_hashtable_lookup);
-    flow_manager->metrics.hashtable_lookup_count++;
-
-    if (ret == FLOW_HASHTABLE_NOT_FOUND) { // Flow does not exist, create it
+    if (entry->is_occupied == false) { // Flow does not exist, create it
         ret = nfcap_flow_manager_create_flow(flow_manager, &flow_context, key);
         nfcap_proto_tcp_connection_checker_init((tcp_connection_checker_t **)&flow_context->checker);
         flow_manager->metrics.flow_count++;
@@ -182,6 +144,11 @@ int nfcap_flow_manager_packet_handler(
         } else if (key->protocol == IPPROTO_UDP) {
             flow_manager->metrics.udp_flow_count++;
         }
+
+        entry->is_occupied = true; // Mark the entry as occupied
+        entry->key = key; // Set the key in the entry
+        entry->data = flow_context; // Set the flow context in the entry
+        flow_manager->ht->size++; // Increment the size of the hashtable
     }
 
     if (ret != 0) {
@@ -207,7 +174,9 @@ int nfcap_flow_manager_packet_handler(
         flow_manager->metrics.tcp_checker_count++;
         if (pkt->flags == TCP_SYN && flow_context->pkt_count > 0) {
             if (flow_context->init_seq != pkt->tcp_seq_num) {
-                nfcap_flow_hashtable_remove_flow(flow_manager->hashtable, &flow_context->key);
+                entry->is_occupied = false; // Mark the entry as unoccupied
+                flow_manager->ht->size--; // Decrement the size of the hashtable
+
                 return FLOW_MANAGER_REPASS;
             }
         }
@@ -273,51 +242,65 @@ int nfcap_flow_manager_packet_handler(
 }
 
 static void nfcap_flow_manager_metrics_print(nfcap_flow_manager_t *flow_manager) {
-    printf("\n### SUMMARY ###\n\n");
-    printf("Flow count: %d\n", flow_manager->metrics.flow_count);
-    printf("TCP flow count: %d\n", flow_manager->metrics.tcp_flow_count);
-    printf("UDP flow count: %d\n", flow_manager->metrics.udp_flow_count);
+    printf("\n### Statistics ###\n\n");
+
+    printf("Packets: %d total, %d tcp, %d udp, %d others\n", 
+        flow_manager->packet_count,
+        flow_manager->metrics.tcp_packet_count,
+        flow_manager->metrics.udp_packet_count,
+        flow_manager->metrics.other_packet_count
+    );
+    printf("Bytes: %lu total, %lu payload\n", 
+        flow_manager->metrics.total_bytes,
+        flow_manager->metrics.total_payload_bytes
+    );
+    printf("Flows: %d total, %d tcp, %d udp\n", 
+        flow_manager->metrics.flow_count,
+        flow_manager->metrics.tcp_flow_count,
+        flow_manager->metrics.udp_flow_count
+    );
     printf("\n");
-
-    printf("Flow expired: %d\n", flow_manager->metrics.flow_expired);
-    printf("CPU time total: %.2fms [%.2fµs/pkt]\n", flow_manager->metrics.cpu_time_total,
-        (flow_manager->metrics.cpu_time_total * 1000) / flow_manager->packet_count);
-    printf("CPU time hashtable insert: %.2fms, [%.2f µs/ins]\n", flow_manager->metrics.cpu_time_hashtable_insert, 
-        (flow_manager->metrics.cpu_time_hashtable_insert * 1000) / flow_manager->metrics.hashtable_insert_count);
-    printf("CPU time hashtable lookup: %.2fms [%.2f µs/pkt]\n", flow_manager->metrics.cpu_time_hashtable_lookup,
-        (flow_manager->metrics.cpu_time_hashtable_lookup * 1000) / flow_manager->packet_count);
-    printf("CPU time hashtable resize: %.2fms\n", flow_manager->metrics.cpu_time_hashtable_resize);
-    printf("CPU time pkthdr create: %.2fms [%.2f µs/pkt]\n", flow_manager->metrics.cpu_time_pkthdr_create,
-        (flow_manager->metrics.cpu_time_pkthdr_create * 1000) / flow_manager->packet_count);
-    printf("CPU time pkthdr update: %.2fms [%.2f µs/pkt]\n", flow_manager->metrics.cpu_time_pkthdr_update,
-        (flow_manager->metrics.cpu_time_pkthdr_update * 1000) / flow_manager->packet_count);
-    printf("CPU time pkthdr TCP checker: %.2fms [%.2f µs/pkt]\n", flow_manager->metrics.cpu_time_pkthdr_tcp_checker,
-        (flow_manager->metrics.cpu_time_pkthdr_tcp_checker * 1000) / flow_manager->metrics.tcp_checker_count);
-
-    printf("Hashtable insert count: %lu\n", flow_manager->metrics.hashtable_insert_count);
-    printf("Hashtable lookup count: %lu\n", flow_manager->metrics.hashtable_lookup_count);
-    printf("Hashtable insert collision count: %lu\n", flow_manager->hashtable->insert_collision_count);
-    printf("Hashtable lookup collision count: %lu\n", flow_manager->hashtable->lookup_collision_count);
-    printf("Hashtable size: %d\n", flow_manager->hashtable->size);
-    printf("Hashtable capacity: %d\n", flow_manager->hashtable->capacity);
-
-    printf("TCP packet count: %d\n", flow_manager->metrics.tcp_packet_count);
-    printf("UDP packet count: %d\n", flow_manager->metrics.udp_packet_count);
-    printf("Other packet count: %d\n", flow_manager->metrics.other_packet_count);
     
-    printf("CPU time MEASURE: %.2fms [%.2fµs/pkt]\n", flow_manager->metrics.cpu_time_total_2,
-        (flow_manager->metrics.cpu_time_total_2 * 1000) / flow_manager->packet_count);
+    printf("Core times: %.2fms [%.2fµs/pkt]\n", 
+        flow_manager->metrics.cpu_time_total,
+        (flow_manager->metrics.cpu_time_total * 1000) / flow_manager->packet_count
+    );
+    printf("  - pkthdr create: %.2fms [%.2f µs/pkt]\n", flow_manager->metrics.cpu_time_pkthdr_create,
+        (flow_manager->metrics.cpu_time_pkthdr_create * 1000) / flow_manager->packet_count);
+    printf("  - pkthdr update: %.2fms [%.2f µs/pkt]\n", flow_manager->metrics.cpu_time_pkthdr_update,
+        (flow_manager->metrics.cpu_time_pkthdr_update * 1000) / flow_manager->packet_count);
+    printf("  - pkthdr TCP checker: %.2fms [%.2f µs/pkt]\n", flow_manager->metrics.cpu_time_pkthdr_tcp_checker,
+        (flow_manager->metrics.cpu_time_pkthdr_tcp_checker * 1000) / flow_manager->metrics.tcp_checker_count);
+    printf("  - hashtable lookup: %.2fms [%.2f µs/pkt]\n", flow_manager->metrics.cpu_time_hashtable_lookup,
+        (flow_manager->metrics.cpu_time_hashtable_lookup * 1000) / flow_manager->packet_count
+    );
 
+    printf("\n"); // Print hashtable metrics
+    
+    printf("Hashtable [%d]: %d active flows (%.1f%%), %lu probes, %lu collisions (%.1f%%)\n", 
+        flow_manager->ht->capacity, 
+        flow_manager->ht->size,
+        (double)flow_manager->ht->size / flow_manager->ht->capacity * 100.0,
+        flow_manager->ht->probe_count,
+        flow_manager->ht->collision_count, 
+        (double)flow_manager->ht->collision_count / (flow_manager->ht->probe_count + flow_manager->ht->collision_count) * 100.0
+    );
+    
     printf("\n");
 
-    printf("Processed %d packets, found %d duplicates within %d µs time window and %d pkts\n", 
-        flow_manager->packet_count, 
+    printf("IP defragmentation: %d fragments processed\n", flow_manager->ip_defrag->ht->size);
+
+    printf("Deduplication: found %d duplicates (%.3f%%) within %d µs time window and %d pkts\n", 
         flow_manager->metrics.dup_packet_count, 
+        (double)flow_manager->metrics.dup_packet_count / flow_manager->packet_count * 100.0,
         flow_manager->dup_time_window, 
         flow_manager->dup_packet_window);
-    printf("Written nfcap size: %lu bytes\n", flow_manager->metrics.written_nfcap_size);
-    printf("Written nfcap flows: %d\n", flow_manager->metrics.written_nfcap_flows);
-    printf("Total payload bytes: %lu\n", flow_manager->metrics.total_payload_bytes);
+    
+    printf("\n");
+    printf("Export: %d flows, %lu bytes written to nfcap file\n", 
+        flow_manager->metrics.written_nfcap_flows, 
+        flow_manager->metrics.written_nfcap_size
+    );
     printf("\n");
 }
 
@@ -343,8 +326,10 @@ int nfcap_flow_manager_dump(nfcap_flow_manager_t *flow_manager) {
         flow_count++;
     }
 
-    flow_manager->metrics.written_nfcap_size += written_bytes;
-    flow_manager->metrics.written_nfcap_flows += flow_count;
+    if (nfcap_file != NULL) {
+        flow_manager->metrics.written_nfcap_size += written_bytes;
+        flow_manager->metrics.written_nfcap_flows += flow_count;
+    }
 
     nfcap_flow_manager_metrics_print(flow_manager);
 

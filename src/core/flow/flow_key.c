@@ -24,8 +24,7 @@
  */
 
 #include <core/flow/flow_key.h>
-#include <core/flow_manager/hashtable/hash_functions/mmh3.h>
-#include <core/flow_manager/hashtable/hash_functions/siphash.h>
+#include <core/flow_manager/hash/mmh3.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -52,8 +51,11 @@ int nfcap_flow_key_is_ordered(const nfcap_flow_key_t *key) {
     return comp < 0 || (comp == 0 && key->port_a < key->port_b);
 } 
 
-int nfcap_flow_key_equals(const nfcap_flow_key_t *key1, const nfcap_flow_key_t *key2) {
+int nfcap_flow_key_equals(void *a, void *b) {
     // Full equals
+    nfcap_flow_key_t *key1 = (nfcap_flow_key_t *)a;
+    nfcap_flow_key_t *key2 = (nfcap_flow_key_t *)b;
+
     bool equals = key1->ip_a[0] == key2->ip_a[0] &&
                   key1->ip_a[1] == key2->ip_a[1] &&
                   key1->ip_a[2] == key2->ip_a[2] &&
@@ -246,7 +248,9 @@ static inline size_t nfcap_flow_key_buffer_append(uint8_t *buffer, const void *d
     return len;
 }
 
-void nfcap_flow_key_hash(nfcap_flow_key_t *key) {
+uint32_t nfcap_flow_key_hash(nfcap_flow_key_t *key, size_t _unused) {
+    (void)_unused; // Unused parameter
+
     uint8_t *key_bytes = calloc(1, sizeof(uint32_t) * 8 + sizeof(uint16_t) * 2 + sizeof(uint8_t));
 
     size_t offset = 0;
@@ -262,6 +266,7 @@ void nfcap_flow_key_hash(nfcap_flow_key_t *key) {
     //siphash(key_bytes, sizeof(uint32_t) * 8 + sizeof(uint16_t) * 2 + sizeof(uint8_t), &_key, (uint8_t *)&hash64, 8);
 
     free(key_bytes);
+    return key->hash;
 }
     
 void nfcap_flow_key_print(const nfcap_flow_key_t *key) {

@@ -49,14 +49,14 @@ struct nfcap_flow_key {
 };
 
 nfcap_flow_key_t *nfcap_flow_key_init();
-int nfcap_flow_key_equals(const nfcap_flow_key_t *key1, const nfcap_flow_key_t *key2);
+int nfcap_flow_key_equals(void *a, void *b);
 int nfcap_flow_key_from_packet(nfcap_flow_key_t *key, const u_char *packet, size_t *offset, void **l3_hdr, void **l4_hdr);
 
 void* nfcap_flow_key_set_ip_hdr(nfcap_flow_key_t *key, const u_char *packet, size_t *offset);
 void *nfcap_flow_key_set_l4_hdr(nfcap_flow_key_t *key, const u_char *packet, size_t *offset);
 void nfcap_flow_key_commit(nfcap_flow_key_t *key);
 
-void nfcap_flow_key_hash(nfcap_flow_key_t *key);
+uint32_t nfcap_flow_key_hash(nfcap_flow_key_t *key, size_t _unused);
 
 void nfcap_flow_key_print(const nfcap_flow_key_t *key);
 
