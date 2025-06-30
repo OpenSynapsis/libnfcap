@@ -44,8 +44,8 @@ static int hashtable_init(
         return -1; // Memory allocation failed
     }
 
-    hashtable->lookup_collision_count = 0;
-    hashtable->insert_collision_count = 0;
+    hashtable->probe_count = 0;
+    hashtable->collision_count = 0;
 
     hashtable->equals = equals;
     hashtable->hash = hash;
@@ -91,18 +91,20 @@ hashtable_entry_t* hashtable_get_entry(hashtable_t *hashtable, void* key, size_t
     if (hashtable->size >= hashtable->capacity * HASHTABLE_FILL_RATIO) {
         // Resize if filled more than the fill ratio
         if (hashtable_expand(hashtable) != 0) {
+            fprintf(stderr, "[-] hashtable: Failed to expand hashtable\n");
             return NULL; // Resize failed
         }
     }
 
     uint32_t hash = hashtable->hash(key, key_size);
     size_t index = hash % hashtable->capacity;
+    hashtable->probe_count++; // Increment probe count
 
     while (hashtable->entries[index].is_occupied) {
         if (hashtable->equals(hashtable->entries[index].key, key)) {
             return hashtable->entries + index; // Return the found data
         }
-        hashtable->lookup_collision_count++;
+        hashtable->collision_count++; // Increment collision count
         index = (index + 1) % hashtable->capacity; // Linear probing
     }
 
@@ -135,4 +137,6 @@ static int hashtable_expand(hashtable_t *hashtable) {
     free(hashtable->entries); // Free old entries
     hashtable->entries = new_entries; // Point to the new entries
     hashtable->capacity = new_capacity; // Update capacity
+
+    return 0;
 }

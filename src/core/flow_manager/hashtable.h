@@ -52,8 +52,8 @@ typedef struct hashtable {
     hashtable_hash_func_t hash; // Function to compute the hash of an entry
 
     // Statistics
-    uint64_t lookup_collision_count;  // Count of collisions during lookups
-    uint64_t insert_collision_count;  // Count of collisions during insertions
+    uint64_t probe_count;      // Count of lookups performed
+    uint64_t collision_count;   // Count of collisions during insertions
 } hashtable_t;
 
 hashtable_t *hashtable_create(uint32_t capacity, hashtable_equals_func_t equals, hashtable_hash_func_t hash);

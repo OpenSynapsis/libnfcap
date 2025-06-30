@@ -15,7 +15,7 @@
    <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
-#include <core/flow_manager/hashtable/hash_functions/siphash.h>
+#include <core/flow_manager/hash/siphash.h>
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>

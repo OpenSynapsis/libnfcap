@@ -36,7 +36,7 @@ enum {
 #include <stdint.h>
 #include <stdio.h>
 #include <pcap.h>
-#include <core/flow_manager/hashtable/hashtable.h>
+#include <core/flow_manager/hashtable.h>
 #include <core/packet/packet_record.h>
 #include <modules/ip_defrag.h>
 
@@ -82,7 +82,7 @@ struct nfcap_flow_manager_metrics {
 
 typedef struct nfcap_flow_manager nfcap_flow_manager_t;
 struct nfcap_flow_manager {
-    nfcap_flow_hashtable_t *hashtable;
+    hashtable_t *ht;
 
     nfcap_flow_context_t *first_created_flow;
     nfcap_flow_context_t *last_created_flow;
