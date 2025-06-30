@@ -25,7 +25,7 @@
 
 #include <core/flow_manager/flow_manager.h>
 #include <core/flow/flow_context.h>
-#include <modules/deduplication/duplicates.h>
+#include <modules/ip_dedup.h>
 
 #include <proto/ethernet.h>
 #include <proto/ipv4.h>
