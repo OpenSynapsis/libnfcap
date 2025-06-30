@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(PROJECT_NAME "libnfcap")
+set(PROJECT_NAME "nfcap")
 set(PROJECT_DESCRIPTION "Flow-oriented network capture library")
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 1)
@@ -21,7 +21,7 @@ include(CTest)
 enable_testing()
 
 # Configure the vscode snippets with project information
-configure_file(templates/vscode.code-snippets.in ${CMAKE_SOURCE_DIR}/.vscode/${PROJECT_NAME}.code-snippets @ONLY)
+configure_file(templates/vscode.code-snippets.in ${CMAKE_SOURCE_DIR}/.vscode/lib${PROJECT_NAME}.code-snippets @ONLY)
 
 # Configure the nglp-config.h file with project information
 configure_file(templates/config.h.in ${CMAKE_SOURCE_DIR}/nfcap/config.h @ONLY)
@@ -40,7 +40,6 @@ add_subdirectory(src/nfcap/protobuf)
 
 # Add openssl
 find_package(OpenSSL REQUIRED)
-
 
 # Add the library
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
