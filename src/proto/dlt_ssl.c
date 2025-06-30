@@ -36,6 +36,14 @@ dlt_ssl_hdr_t* nfcap_proto_unpack_dlt_ssl(const u_char *packet, size_t *offset) 
     uint8_t addr_len = ntohs(dlt_ssl_hdr->ssl_link_layer_address_length);
     *offset += DLT_SSL_STATIC_LENGTH + addr_len;
 
+    if (addr_len > 0) {
+        dlt_ssl_hdr->ssl_source_address = (uint8_t *)(packet + *offset - addr_len);
+    } else {
+        dlt_ssl_hdr->ssl_source_address = NULL; // No source address
+    }
+
+    dlt_ssl_hdr->ssl_protocol = *((uint16_t *)(packet + 8 + addr_len));
+
     return dlt_ssl_hdr;
 }
     
