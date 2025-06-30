@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: packet_record.h
  *
  * Description: Flow-oriented network capture library

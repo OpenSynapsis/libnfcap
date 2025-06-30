@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: test_hashtables.c
  *
  * Description: Flow-oriented network capture library

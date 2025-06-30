@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: file.h
  *
  * Description: Flow-oriented network capture library

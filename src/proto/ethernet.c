@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: ethernet.c
  *
  * Description: Flow-oriented network capture library

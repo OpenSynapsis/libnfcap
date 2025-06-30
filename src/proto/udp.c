@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnfcap
  * File: udp.c
  *
  * Description: Flow-oriented network capture library
