@@ -27,6 +27,7 @@
 #define PACKET_RECORD_H
 
 typedef struct nfcap_pkthdr nfcap_pkthdr_t;
+typedef struct nfcap_flow_manager nfcap_flow_manager_t;
 
 #include <core/flow/flow_context.h>
 #include <core/flow/flow_key.h>
@@ -38,11 +39,9 @@ typedef struct nfcap_pkthdr nfcap_pkthdr_t;
 #include <pcap.h>
 #include <nfcap_types.h>
 
-
 struct nfcap_pkthdr {
     struct timeval ts;  // Absolute timestamp
     struct timeval rts; // Relative timestamp
-
 
     int c_state;
     int s_state;
@@ -52,6 +51,15 @@ struct nfcap_pkthdr {
     uint8_t direction;
     uint32_t flags;
 
+    struct {
+        uint8_t is_fragment : 1; // Is this packet an IP fragment?
+        uint8_t more_fragments : 1; // More fragments follow
+        uint8_t reserved : 6; // Reserved bits for future use
+    }__attribute__((packed));
+
+    uint16_t frag_id; // Fragment ID for IPv4 fragments
+    uint16_t frag_offset; // Fragment offset for IPv4 fragments
+
     uint32_t tcp_seq_num;
     packet_hash_t hash;  
     
@@ -59,7 +67,7 @@ struct nfcap_pkthdr {
     nfcap_pkthdr_t *prev;
 };
 
-int nfcap_pkthdr_create(nfcap_pkthdr_t *nfcap_pkthdr, int datalink, const struct pcap_pkthdr *header, const u_char* packet, nfcap_flow_key_t *key);
+int nfcap_pkthdr_create(nfcap_pkthdr_t **nfcap_pkthdr, nfcap_flow_manager_t *fm, const struct pcap_pkthdr *header, const u_char* packet, nfcap_flow_key_t **_key);
 int nfcap_pkthdr_update(nfcap_pkthdr_t *nfcap_pkthdr, nfcap_flow_key_t *key, nfcap_flow_context_t *flow_context);
 
 void nfcap_pkthdr_print(nfcap_pkthdr_t *nfcap_pkthdr);

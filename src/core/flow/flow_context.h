@@ -79,7 +79,7 @@ struct nfcap_flow_context {
 
     void *checker;
 
-    // Used for list
+    // Chain flow context in creation order
     nfcap_flow_context_t *next;
     nfcap_flow_context_t *prev;
 
@@ -92,6 +92,7 @@ struct nfcap_flow_context {
 #endif
 
 int nfcap_flow_context_init(nfcap_flow_context_t *flow_context);
+int nfcap_flow_context_create(nfcap_flow_context_t **flow_context, nfcap_flow_key_t *key);
 int nfcap_flow_context_destroy(nfcap_flow_context_t *flow_context);
 
 int nfcap_flow_context_insert_packet(nfcap_flow_context_t *flow_context, nfcap_pkthdr_t *pkt);

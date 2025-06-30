@@ -24,6 +24,7 @@
  */
 
 #include <core/packet/packet_record.h>
+#include <core/flow_manager/flow_manager.h>
 #include <utils/timeval.h>
 #include <utils/hash.h>
 
@@ -33,83 +34,128 @@
 #include <proto/ipv6.h>
 #include <proto/tcp.h>
 
-int nfcap_pkthdr_create(nfcap_pkthdr_t *nfcap_pkthdr, int datalink, const struct pcap_pkthdr *header, const u_char* packet, nfcap_flow_key_t *key) {
+#include <modules/ip_defrag.h>
+
+static inline uint32_t nfcap_pkthdr_get_ip_version(uint16_t ether_type) {
+    switch (ntohs(ether_type)) {
+        case ETHERTYPE_IPV4:
+            return 4;
+        case ETHERTYPE_IPV6:
+            return 6;
+        default:
+            return 0; // Unsupported type
+    }
+}
+
+int nfcap_pkthdr_create(nfcap_pkthdr_t **nfcap_pkthdr, nfcap_flow_manager_t *fm, const struct pcap_pkthdr *header, const u_char* packet, nfcap_flow_key_t **flow_key) {
     size_t offset = 0;
     int ret = 0;
     uint32_t datalink_len = 0;
     
-    nfcap_flow_key_init(key);
+    *nfcap_pkthdr = calloc(1, sizeof(nfcap_pkthdr_t));
+    *flow_key = nfcap_flow_key_init();
 
-    switch (datalink) {
+    switch (fm->datalink_type) {
         case DLT_EN10MB:
             ether_hdr_t *ether_hdr = nfcap_proto_unpack_ethernet(packet, &offset);
-            key->ip_v = (ntohs(ether_hdr->ether_type) == ETHERTYPE_IPV4) ? 4 : 6;
+            (*flow_key)->ip_v = nfcap_pkthdr_get_ip_version(ether_hdr->ether_type);
+            
             datalink_len = offset;
             break;
         case DLT_LINUX_SLL:
             dlt_ssl_hdr_t *dlt_ssl_hdr = nfcap_proto_unpack_dlt_ssl(packet, &offset);
-            key->ip_v = 4; //(ntohs(dlt_ssl_hdr->ssl_protocol) == ETHERTYPE_IPV4) ? 4 : 6;
+            (*flow_key)->ip_v = nfcap_pkthdr_get_ip_version(dlt_ssl_hdr->ssl_protocol);
             datalink_len = offset;
             break;
         default:
-            fprintf(stderr, "Error: Unsupported datalink type, type=%d\n", datalink);
-            return 1;
+            fprintf(stderr, "Error: Unsupported datalink type, type=%d\n", fm->datalink_type);
+            return -1;
     }
 
     // Skip non-IP packets
-    if (key->ip_v != 4 && key->ip_v != 6) {
-        //printf("Non-IP packet, skipping\n");
-        return 1;
-    }
-
-    void *ip_hdr;
-    tcp_hdr_t *tcp_hdr;
-
-    ret = nfcap_flow_key_from_packet(key, packet, &offset, (void **)&ip_hdr, (void **)&tcp_hdr);
-    if (ret != 0) {
-        return ret;
+    if ((*flow_key)->ip_v != 4 && (*flow_key)->ip_v != 6) {
+        return -1;
     }
 
     uint16_t ip_hdr_len;
+    void *ip_hdr = nfcap_flow_key_set_ip_hdr(*flow_key, packet, &offset);
 
-    switch (key->ip_v) {
-    case 4:
-        ipv4_hdr_t *ipv4_hdr = (ipv4_hdr_t *)ip_hdr;
-        ip_hdr_len = ntohs(ipv4_hdr->tot_len);
+    switch ((*flow_key)->ip_v) {
+        case 4:
+            ipv4_hdr_t *ipv4_hdr = (ipv4_hdr_t *)ip_hdr;
+            ip_hdr_len = ntohs(ipv4_hdr->tot_len);
 
-        // Set to zero mutable fields
-        ipv4_hdr->tos = 0; // DSCP + ECN
-        ipv4_hdr->frag_off = 0; // Flag + Fragment offset
-        ipv4_hdr->ttl = 0;
-        ipv4_hdr->check = 0;
+            (*nfcap_pkthdr)->is_fragment = IS_IP_FRAGMENT(ntohs(ipv4_hdr->frag_off));
+            (*nfcap_pkthdr)->more_fragments = MF_IS_SET(ntohs(ipv4_hdr->frag_off) & MF_FLAG);
+            (*nfcap_pkthdr)->frag_offset = OFFSET_IN_BYTES(ntohs(ipv4_hdr->frag_off));
+            (*nfcap_pkthdr)->frag_id = ntohs(ipv4_hdr->id);
 
-        break;
-    case 6:
-        ipv6_hdr_t *ipv6_hdr = (ipv6_hdr_t *)ip_hdr;
-        ip_hdr_len = sizeof(ipv6_hdr_t) + ntohs(ipv6_hdr->payload_len);
+            // Set to zero mutable fields
+            ipv4_hdr->tos = 0; // DSCP + ECN
+            ipv4_hdr->frag_off = 0; // Flag + Fragment offset
+            ipv4_hdr->ttl = 0;
+            ipv4_hdr->check = 0;
 
-        // Set to zero mutable fields
-        ipv6_hdr->priority = 0;
-        ipv6_hdr->flow_lbl[0] = 0;
-        ipv6_hdr->flow_lbl[1] = 0;
-        ipv6_hdr->flow_lbl[2] = 0;
-        ipv6_hdr->hop_limit = 0;
+            break;
+        case 6:
+            ipv6_hdr_t *ipv6_hdr = (ipv6_hdr_t *)ip_hdr;
+            ip_hdr_len = sizeof(ipv6_hdr_t) + ntohs(ipv6_hdr->payload_len);
 
-        break;
-    default:
-        return 1;
+            // Set to zero mutable fields
+            ipv6_hdr->priority = 0;
+            ipv6_hdr->flow_lbl[0] = 0;
+            ipv6_hdr->flow_lbl[1] = 0;
+            ipv6_hdr->flow_lbl[2] = 0;
+            ipv6_hdr->hop_limit = 0;
+
+            break;
+        default:
+            return 1;
     }
 
-    nfcap_pkthdr->ts = header->ts;
-    nfcap_pkthdr->plen = (datalink_len + ip_hdr_len) - offset;
-    
-    // Compute the hash of the packet from network layer
-    nfcap_utils_hash(packet, datalink_len, ip_hdr_len, nfcap_pkthdr->hash);
-    
-    if (key->protocol == IPPROTO_TCP) {
-        nfcap_pkthdr->flags = tcp_hdr->flags;
-        nfcap_pkthdr->tcp_seq_num = tcp_hdr->seq_num;
+    if ((*nfcap_pkthdr)->is_fragment) {
+        nfcap_ip_defrag_key_t *defrag_key = nfcap_ip_defrag_key_create(
+            ((ipv4_hdr_t *)ip_hdr)->saddr, 
+            ((ipv4_hdr_t *)ip_hdr)->daddr,
+            (*nfcap_pkthdr)->frag_id,
+            ((ipv4_hdr_t *)ip_hdr)->protocol
+        );
+
+        // Get the IP defragmentation context
+        nfcap_ip_defrag_packet_handler(
+            fm->ip_defrag, 
+            defrag_key,
+            flow_key,
+            nfcap_pkthdr, 
+            (uint8_t *)packet + datalink_len,
+            ip_hdr_len
+        );
+
+        if (!(*nfcap_pkthdr)->more_fragments) {
+            // If this is the last fragment, compute the hash of the reassembled packet
+            if (nfcap_ip_defrag_reassemble(fm->ip_defrag, defrag_key) == 0) {
+                (*nfcap_pkthdr)->is_fragment = 0; // Reset fragment flag for reassembled packet
+            }
+            return 0;
+        } else if ((*nfcap_pkthdr)->frag_offset > 0) {
+            return 0;
+        }
+        
+    } else {
+        // Compute the hash of the packet from network layer
+        nfcap_utils_hash(packet, datalink_len, ip_hdr_len, (*nfcap_pkthdr)->hash);
     }
+    
+    void *l4_hdr = nfcap_flow_key_set_l4_hdr(*flow_key, packet, &offset);
+    
+    (*nfcap_pkthdr)->ts = header->ts;
+    (*nfcap_pkthdr)->plen = (datalink_len + ip_hdr_len) - offset;
+    
+    if ((*flow_key)->protocol == IPPROTO_TCP) {
+        (*nfcap_pkthdr)->flags = ((tcp_hdr_t *)l4_hdr)->flags;
+        (*nfcap_pkthdr)->tcp_seq_num = ((tcp_hdr_t *)l4_hdr)->seq_num;
+    }
+    nfcap_flow_key_commit(*flow_key);
 
     return 0;
 }
@@ -156,15 +202,15 @@ void nfcap_pkthdr_print(nfcap_pkthdr_t *nfcap_pkthdr) {
     );
 
     // Pretty print of client and server states
-    //printf("\t");
-    //printf("Client state: %s, Server state: %s", 
-    //    nfcap_proto_tcp_state_to_string(nfcap_pkthdr->c_state), 
-    //    nfcap_proto_tcp_state_to_string(nfcap_pkthdr->s_state)
-    //);
+    printf("\t");
+    printf("Client state: %s, Server state: %s", 
+        nfcap_proto_tcp_state_to_string(nfcap_pkthdr->c_state), 
+        nfcap_proto_tcp_state_to_string(nfcap_pkthdr->s_state)
+    );
 
     // Print the hash
-    //char hash_str[NFCAP_HASH_STR_SIZE];
-    //nfcap_utils_hash_to_string(nfcap_pkthdr->hash, hash_str);
-    //printf("\tHash: %s", hash_str);
+    char hash_str[NFCAP_HASH_STR_SIZE];
+    nfcap_utils_hash_to_string(nfcap_pkthdr->hash, hash_str);
+    printf("\tHash: %s", hash_str);
     printf("\n");
 }

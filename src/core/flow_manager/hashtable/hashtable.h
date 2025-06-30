@@ -54,7 +54,7 @@ struct nfcap_flow_hashtable {
 int nfcap_flow_hashtable_init(nfcap_flow_hashtable_t *hashtable, uint32_t capacity);
 int nfcap_flow_hashtable_destroy(nfcap_flow_hashtable_t *hashtable);
 
-int nfcap_flow_hashtable_insert_flow(nfcap_flow_hashtable_t *hashtable, nfcap_flow_context_t **flow_context, nfcap_flow_key_t *key);
+int nfcap_flow_hashtable_insert_flow(nfcap_flow_hashtable_t *hashtable, nfcap_flow_context_t *flow_context, nfcap_flow_key_t *key);
 int nfcap_flow_hashtable_get_flow(nfcap_flow_hashtable_t *hashtable, nfcap_flow_context_t **flow_context, nfcap_flow_key_t *key);
 int nfcap_flow_hashtable_remove_flow(nfcap_flow_hashtable_t *hashtable, nfcap_flow_key_t *key);
 

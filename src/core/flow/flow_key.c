@@ -34,8 +34,8 @@
 #include <proto/tcp.h>
 #include <proto/udp.h>
 
-void nfcap_flow_key_init(nfcap_flow_key_t *key) {
-    memset(key, 0, sizeof(nfcap_flow_key_t));
+nfcap_flow_key_t *nfcap_flow_key_init() {
+    return calloc(1, sizeof(nfcap_flow_key_t));
 }
 
 int nfcap_flow_key_is_ordered(const nfcap_flow_key_t *key) {
@@ -83,6 +83,107 @@ int nfcap_flow_key_equals(const nfcap_flow_key_t *key1, const nfcap_flow_key_t *
     return equals;
 }
 
+static ipv4_hdr_t * nfcap_flow_key_extract_ipv4(nfcap_flow_key_t *key, const u_char *packet, size_t *offset) {
+    ipv4_hdr_t *ipv4_hdr = nfcap_proto_unpack_ipv4(packet, offset);
+    if (ipv4_hdr == NULL) {
+        return NULL; // Error unpacking IPv4 header
+    }
+
+    key->ip_a[0] = ipv4_hdr->saddr;
+    key->ip_b[0] = ipv4_hdr->daddr;
+    key->protocol = ipv4_hdr->protocol;
+
+    return ipv4_hdr;
+}
+
+static ipv6_hdr_t * nfcap_flow_key_extract_ipv6(nfcap_flow_key_t *key, const u_char *packet, size_t *offset) {
+    ipv6_hdr_t *ipv6_hdr = nfcap_proto_unpack_ipv6(packet, offset);
+    if (ipv6_hdr == NULL) {
+        return NULL; // Error unpacking IPv6 header
+    }
+
+    memcpy(key->ip_a, &ipv6_hdr->saddr, sizeof(ipv6_addr_t));
+    memcpy(key->ip_b, &ipv6_hdr->daddr, sizeof(ipv6_addr_t));
+    key->protocol = ipv6_hdr->nexthdr;
+
+    return ipv6_hdr;
+}
+
+void* nfcap_flow_key_set_ip_hdr(nfcap_flow_key_t *key, const u_char *packet, size_t *offset) {
+    void *ip_hdr = NULL;
+
+    switch (key->ip_v) {
+        case 4:
+            ip_hdr = (void*)nfcap_flow_key_extract_ipv4(key, packet, offset);
+            break;
+        case 6:
+            ip_hdr = (void*)nfcap_flow_key_extract_ipv6(key, packet, offset);
+            break;
+        default:
+            return NULL; // Unsupported IP version
+    }
+
+    return ip_hdr;
+}
+
+static tcp_hdr_t * nfcap_flow_key_extract_tcp(nfcap_flow_key_t *key, const u_char *packet, size_t *offset) {
+    tcp_hdr_t *tcp_hdr = nfcap_proto_unpack_tcp(packet, offset);
+    if (tcp_hdr == NULL) {
+        return NULL; // Error unpacking TCP header
+    }
+
+    key->port_a = ntohs(tcp_hdr->sport);
+    key->port_b = ntohs(tcp_hdr->dport);
+
+    return tcp_hdr;
+}
+
+static udp_hdr_t * nfcap_flow_key_extract_udp(nfcap_flow_key_t *key, const u_char *packet, size_t *offset) {
+    udp_hdr_t *udp_hdr = nfcap_proto_unpack_udp(packet, offset);
+    if (udp_hdr == NULL) {
+        return NULL; // Error unpacking UDP header
+    }
+
+    key->port_a = ntohs(udp_hdr->sport);
+    key->port_b = ntohs(udp_hdr->dport);
+
+    return udp_hdr;
+}
+
+void *nfcap_flow_key_set_l4_hdr(nfcap_flow_key_t *key, const u_char *packet, size_t *offset) {
+    void *l4_hdr = NULL;
+
+    switch (key->protocol) {
+        case IPPROTO_TCP:
+            l4_hdr = (void *)nfcap_flow_key_extract_tcp(key, packet, offset);
+            break;
+        case IPPROTO_UDP:
+            l4_hdr = (void *)nfcap_flow_key_extract_udp(key, packet, offset);
+            break;
+        default:
+            return NULL; // Unsupported protocol
+    }
+
+    return l4_hdr;
+}
+
+void nfcap_flow_key_commit(nfcap_flow_key_t *key) {
+    if (nfcap_flow_key_is_ordered(key)) {
+        key->inverted = 0;
+    } else {
+        uint32_t tmp_ip[4];
+        memcpy(tmp_ip, key->ip_a, sizeof(uint32_t) * 4);
+        memcpy(key->ip_a, key->ip_b, sizeof(uint32_t) * 4);
+        memcpy(key->ip_b, tmp_ip, sizeof(uint32_t) * 4);
+
+        uint16_t tmp_port = key->port_a;
+        key->port_a = key->port_b;
+        key->port_b = tmp_port;
+
+        key->inverted = 1;
+    }
+}
+
 int nfcap_flow_key_from_packet(nfcap_flow_key_t *key, const u_char *packet, size_t *offset, void **l3_hdr, void **l4_hdr) {
     void *ip_hdr;
 
@@ -125,7 +226,6 @@ int nfcap_flow_key_from_packet(nfcap_flow_key_t *key, const u_char *packet, size
 
     if (nfcap_flow_key_is_ordered(key)) {
         key->inverted = 0;
-   
     } else {
         uint32_t tmp_ip[4];
         memcpy(tmp_ip, key->ip_a, sizeof(uint32_t) * 4);
@@ -146,7 +246,7 @@ static inline size_t nfcap_flow_key_buffer_append(uint8_t *buffer, const void *d
     return len;
 }
 
-uint32_t nfcap_flow_key_hash(const nfcap_flow_key_t *key, int attempt, int capacity) {
+void nfcap_flow_key_hash(nfcap_flow_key_t *key) {
     uint8_t *key_bytes = calloc(1, sizeof(uint32_t) * 8 + sizeof(uint16_t) * 2 + sizeof(uint8_t));
 
     size_t offset = 0;
@@ -156,15 +256,12 @@ uint32_t nfcap_flow_key_hash(const nfcap_flow_key_t *key, int attempt, int capac
     offset += nfcap_flow_key_buffer_append(key_bytes + offset, &key->port_b, sizeof(uint16_t));
     offset += nfcap_flow_key_buffer_append(key_bytes + offset, &key->protocol, sizeof(uint8_t));
 
-
-    uint32_t hash = murmur3_32(key_bytes, sizeof(uint32_t) * 8 + sizeof(uint16_t) * 2 + sizeof(uint8_t), 0);
+    key->hash = murmur3_32(key_bytes, offset, 0);
     //uint64_t hash64;
     //uint8_t _key = {0x01};
     //siphash(key_bytes, sizeof(uint32_t) * 8 + sizeof(uint16_t) * 2 + sizeof(uint8_t), &_key, (uint8_t *)&hash64, 8);
 
     free(key_bytes);
-
-    return (hash + attempt) % capacity;
 }
     
 void nfcap_flow_key_print(const nfcap_flow_key_t *key) {

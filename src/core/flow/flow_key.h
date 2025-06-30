@@ -44,12 +44,19 @@ struct nfcap_flow_key {
     uint8_t protocol;
     uint16_t port_a;
     uint16_t port_b;
+
+    uint32_t hash; // Hash of the key, computed from the IPs, ports and protocol
 };
 
-void nfcap_flow_key_init(nfcap_flow_key_t *key);
+nfcap_flow_key_t *nfcap_flow_key_init();
 int nfcap_flow_key_equals(const nfcap_flow_key_t *key1, const nfcap_flow_key_t *key2);
 int nfcap_flow_key_from_packet(nfcap_flow_key_t *key, const u_char *packet, size_t *offset, void **l3_hdr, void **l4_hdr);
-uint32_t nfcap_flow_key_hash(const nfcap_flow_key_t *key, int attempt, int capacity);
+
+void* nfcap_flow_key_set_ip_hdr(nfcap_flow_key_t *key, const u_char *packet, size_t *offset);
+void *nfcap_flow_key_set_l4_hdr(nfcap_flow_key_t *key, const u_char *packet, size_t *offset);
+void nfcap_flow_key_commit(nfcap_flow_key_t *key);
+
+void nfcap_flow_key_hash(nfcap_flow_key_t *key);
 
 void nfcap_flow_key_print(const nfcap_flow_key_t *key);
 

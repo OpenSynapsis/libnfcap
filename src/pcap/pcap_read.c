@@ -73,11 +73,12 @@ int read_pcap_file(char* filename, char* output_filename, int dup_time_window, i
     
     ret = pcap_dispatch(pcap, 0, packet_handler, (u_char *) flow_manager);
     if (ret < 0) {
-        fprintf(stderr, "Error: pcap_dispatch failed [%d]\n", ret);
+        fprintf(stderr, "[-] Failed (%d) - ", ret);
         pcap_perror(pcap, "pcap_dispatch");
     }
 
     nfcap_flow_manager_dump(flow_manager);
+    nfcap_flow_manager_destroy(flow_manager);
 
     pcap_close(pcap);
 
