@@ -3,7 +3,7 @@
         "prefix": "License",
         "body": [
             "/*",
-            " * Project: @PROJECT_NAME@",
+            " * Project: lib@PROJECT_NAME@",
             " * File: ${TM_FILENAME}",
             " *",
             " * Description: @PROJECT_DESCRIPTION@",
