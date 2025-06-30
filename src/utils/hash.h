@@ -34,7 +34,11 @@
 #define NFCAP_HASH_SIZE EVP_MD_size(NFCAP_HASH_TYPE)
 #define NFCAP_HASH_STR_SIZE (NFCAP_HASH_SIZE * 2 + 1) // 1 for null terminator
 typedef uint8_t packet_hash_t[EVP_MAX_MD_SIZE];
+EVP_MD_CTX *nfcap_utils_hash_init();
+int nfcap_utils_hash_update(EVP_MD_CTX *mdctx, const uint8_t *data, size_t len);
+int nfcap_utils_hash_get(EVP_MD_CTX *mdctx, packet_hash_t hash);
 int nfcap_utils_hash(const uint8_t *data, size_t offset, size_t len, packet_hash_t hash);
 int nfcap_utils_hash_to_string(packet_hash_t hash, char *str);
+void nfcap_utils_hash_print(packet_hash_t hash);
 
 #endif // HASH_H

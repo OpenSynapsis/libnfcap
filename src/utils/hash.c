@@ -28,29 +28,64 @@
 #include <stdio.h>
 #include <string.h>
 
-int nfcap_utils_hash(const uint8_t *data, size_t offset, size_t len, packet_hash_t hash) {
+EVP_MD_CTX *nfcap_utils_hash_init() {
     EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
     if (mdctx == NULL) {
-        return -1;
+        return NULL; // Memory allocation failed
     }
 
     if (EVP_DigestInit_ex(mdctx, NFCAP_HASH_TYPE, NULL) != 1) {
         EVP_MD_CTX_free(mdctx);
-        return -1;
+        return NULL; // Initialization failed
     }
 
-    if (EVP_DigestUpdate(mdctx, (void *)data + offset, len) != 1) {
+    return mdctx;
+}
+
+static void _dump_buffer(const uint8_t *data, size_t len) {
+    // Group the data into 16-byte chunks for better readability
+    for (size_t i = 0; i < len; i += 16)
+    {
+        printf("%04zx: ", i); // Print the offset
+        for (size_t j = 0; j < 16 && (i + j) < len; j++)
+        {
+            printf("%02x", data[i + j]); // Print each byte in hex
+        }
+        printf("\n");
+    }
+}
+
+int nfcap_utils_hash_update(EVP_MD_CTX *mdctx, const uint8_t *data, size_t len) {
+    //_dump_buffer(data, len); // Dump the buffer for debugging
+    if (EVP_DigestUpdate(mdctx, (void *)data, len) != 1) {
         EVP_MD_CTX_free(mdctx);
-        return -1;
+        return -1; // Update failed
     }
+    return 0; // Update successful
+}
 
+int nfcap_utils_hash_get(EVP_MD_CTX *mdctx, packet_hash_t hash) {
     unsigned int hash_len;
     if (EVP_DigestFinal_ex(mdctx, hash, &hash_len) != 1) {
         EVP_MD_CTX_free(mdctx);
-        return -1;
+        printf("Error: Failed to finalize hash context\n");
+
+        return -1; // Finalization failed
     }
     EVP_MD_CTX_free(mdctx);
-    return 0;
+    return 0; // Success
+}
+
+int nfcap_utils_hash(const uint8_t *data, size_t offset, size_t len, packet_hash_t hash) {
+    EVP_MD_CTX *mdctx = nfcap_utils_hash_init();
+
+    if (nfcap_utils_hash_update(mdctx, (void *)data + offset, len) != 0) {
+        fprintf(stderr, "Error: Failed to update hash context\n");
+        return -1;
+    }
+
+    nfcap_utils_hash_get(mdctx, hash);
+    return 0; // Success
 }
 
 int nfcap_utils_hash_to_string(packet_hash_t hash, char *str) {
@@ -59,4 +94,10 @@ int nfcap_utils_hash_to_string(packet_hash_t hash, char *str) {
         sprintf(str + (i * 2), "%02x", hash[i]);
     }
     return 0;
+}
+
+void nfcap_utils_hash_print(packet_hash_t hash) {
+    char hash_str[NFCAP_HASH_STR_SIZE];
+    nfcap_utils_hash_to_string(hash, hash_str);
+    printf("Hash: %s\n", hash_str);
 }
