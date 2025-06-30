@@ -45,25 +45,21 @@ int nfcap_flow_hashtable_destroy(nfcap_flow_hashtable_t *hashtable) {
     return 0;
 }
 
-int nfcap_flow_hashtable_insert_flow(nfcap_flow_hashtable_t *hashtable, nfcap_flow_context_t **flow_context, nfcap_flow_key_t *key) {
+int nfcap_flow_hashtable_insert_flow(nfcap_flow_hashtable_t *hashtable, nfcap_flow_context_t *flow_context, nfcap_flow_key_t *key) {
     int attempt = 0; 
     struct nfcap_flow_hashtable_entry *entry = NULL;
-    *flow_context = calloc(1, sizeof(nfcap_flow_context_t));
-    if (*flow_context == NULL) {
-        return -1; // Memory allocation error
-    }
 
     if (hashtable->size >= hashtable->capacity) {
         return FLOW_HASHTABLE_FULL;
     }
 
     do {
-        uint32_t hash = nfcap_flow_key_hash(key, attempt, hashtable->capacity);
+        uint32_t hash = (key->hash + attempt) % hashtable->capacity; // Linear probing
         entry = &hashtable->entries[hash];
     } while (entry->is_occupied && ++attempt < hashtable->capacity);
     
     entry->is_occupied = true;
-    entry->flow_context = *flow_context;
+    entry->flow_context = flow_context;
 
     hashtable->size++;
     hashtable->insert_collision_count += attempt;
@@ -75,7 +71,7 @@ int nfcap_flow_hashtable_get_flow(nfcap_flow_hashtable_t *hashtable, nfcap_flow_
     struct nfcap_flow_hashtable_entry *entry = NULL;
 
     while (*flow_context == NULL && attempt < hashtable->capacity) {
-        uint32_t hash = nfcap_flow_key_hash(key, attempt, hashtable->capacity);
+        uint32_t hash = (key->hash + attempt) % hashtable->capacity; // Linear probing
         entry = &hashtable->entries[hash];
         
         if (entry->is_occupied && nfcap_flow_key_equals(&entry->flow_context->key, key)) {
@@ -96,13 +92,12 @@ int nfcap_flow_hashtable_remove_flow(nfcap_flow_hashtable_t *hashtable, nfcap_fl
     struct nfcap_flow_hashtable_entry *entry = NULL;
 
     while (attempt < hashtable->capacity) {
-        uint32_t hash = nfcap_flow_key_hash(key, attempt, hashtable->capacity);
+        uint32_t hash = (key->hash + attempt) % hashtable->capacity; // Linear probing
         entry = &hashtable->entries[hash];
 
         if (entry->is_occupied && nfcap_flow_key_equals(&entry->flow_context->key, key)) {
             entry->is_occupied = false;
             entry->flow_context = NULL;
-            //memset(&entry->flow_context, 0, sizeof(nfcap_flow_context_t));
             hashtable->size--;
             return 0;
         }
@@ -149,7 +144,7 @@ int nfcap_flow_hashtable_resize(nfcap_flow_hashtable_t *hashtable) {
             struct nfcap_flow_hashtable_entry *entry = NULL;
 
             do {
-                uint32_t hash = nfcap_flow_key_hash(key, attempt, new_capacity);
+                uint32_t hash = (key->hash + attempt) % new_capacity; // Linear probing
                 entry = &new_entries[hash];
             } while (entry->is_occupied && ++attempt < new_capacity);
 

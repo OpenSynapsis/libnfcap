@@ -26,15 +26,23 @@
 #ifndef FLOW_MANAGER_H
 #define FLOW_MANAGER_H
 
-#define FLOW_MANAGER_SUCCESS 0
-#define FLOW_MANAGER_PROTOCOL_NOT_SUPPORTED 1
-#define FLOW_MANAGER_REPASS 2
+//#define FLOW_MANAGER_SUCCESS 0
+//#define FLOW_MANAGER_PROTOCOL_NOT_SUPPORTED 1
+//#define FLOW_MANAGER_REPASS 2
+
+enum {
+    FLOW_MANAGER_SUCCESS = 0,
+    FLOW_MANAGER_PROTOCOL_NOT_SUPPORTED,
+    FLOW_MANAGER_REPASS,
+    FLOW_MANAGER_IP_FRAGMENT
+};
 
 #include <stdint.h>
 #include <stdio.h>
 #include <pcap.h>
 #include <core/flow_manager/hashtable/hashtable.h>
-#include <core/flow_manager/flow_list.h>
+#include <core/packet/packet_record.h>
+#include <modules/ip_defrag.h>
 
 typedef struct nfcap_flow_manager_metrics nfcap_flow_manager_metrics_t;
 struct nfcap_flow_manager_metrics {
@@ -69,17 +77,23 @@ struct nfcap_flow_manager_metrics {
 
     uint64_t total_bytes;
     uint64_t total_read_bytes;
+    uint64_t total_payload_bytes;
 
     uint32_t dup_packet_count;
     size_t written_nfcap_size;
+    uint32_t written_nfcap_flows;
 };
 
 typedef struct nfcap_flow_manager nfcap_flow_manager_t;
 struct nfcap_flow_manager {
     nfcap_flow_hashtable_t *hashtable;
-    nfcap_flow_list_t *flow_list;
+
+    nfcap_flow_context_t *first_created_flow;
+    nfcap_flow_context_t *last_created_flow;
 
     int datalink_type;
+
+    nfcap_ip_defrag_t *ip_defrag;
 
     double cpu_time_per_packet;
     uint32_t packet_count;
