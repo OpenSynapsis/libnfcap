@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: packet_record.h
  *
  * Description: Flow-oriented network capture library
@@ -26,8 +26,8 @@
 #ifndef PACKET_RECORD_H
 #define PACKET_RECORD_H
 
-typedef struct nfcap_pkthdr nfcap_pkthdr_t;
-typedef struct nfcap_flow_manager nfcap_flow_manager_t;
+typedef struct nxcap_pkthdr nxcap_pkthdr_t;
+typedef struct nxcap_flow_manager nxcap_flow_manager_t;
 
 #include <core/flow/flow_context.h>
 #include <core/flow/flow_key.h>
@@ -37,9 +37,9 @@ typedef struct nfcap_flow_manager nfcap_flow_manager_t;
 #include <stdint.h>
 #include <sys/time.h>
 #include <pcap.h>
-#include <nfcap_types.h>
+#include <nxcap_types.h>
 
-struct nfcap_pkthdr {
+struct nxcap_pkthdr {
     struct timeval ts;  // Absolute timestamp
     struct timeval rts; // Relative timestamp
 
@@ -63,13 +63,13 @@ struct nfcap_pkthdr {
     uint32_t tcp_seq_num;
     packet_hash_t hash;  
     
-    nfcap_pkthdr_t *next;
-    nfcap_pkthdr_t *prev;
+    nxcap_pkthdr_t *next;
+    nxcap_pkthdr_t *prev;
 };
 
-int nfcap_pkthdr_create(nfcap_pkthdr_t **nfcap_pkthdr, nfcap_flow_manager_t *fm, const struct pcap_pkthdr *header, const u_char* packet, nfcap_flow_key_t **_key);
-int nfcap_pkthdr_update(nfcap_pkthdr_t *nfcap_pkthdr, nfcap_flow_key_t *key, nfcap_flow_context_t *flow_context);
+int nxcap_pkthdr_create(nxcap_pkthdr_t **nxcap_pkthdr, nxcap_flow_manager_t *fm, const struct pcap_pkthdr *header, const u_char* packet, nxcap_flow_key_t **_key);
+int nxcap_pkthdr_update(nxcap_pkthdr_t *nxcap_pkthdr, nxcap_flow_key_t *key, nxcap_flow_context_t *flow_context);
 
-void nfcap_pkthdr_print(nfcap_pkthdr_t *nfcap_pkthdr);
+void nxcap_pkthdr_print(nxcap_pkthdr_t *nxcap_pkthdr);
 
 #endif // PACKET_RECORD_H

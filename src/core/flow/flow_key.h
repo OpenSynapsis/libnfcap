@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: flow_key.h
  *
  * Description: Flow-oriented network capture library
@@ -29,12 +29,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <pcap.h>
-#include <nfcap_types.h>
+#include <nxcap_types.h>
 
 // Spec at https://github.com/corelight/community-id-spec/blob/bda913f617389df07cdaa23606e11bbd318e265c/community-id.py#L114
 
-typedef struct nfcap_flow_key nfcap_flow_key_t;
-struct nfcap_flow_key {
+typedef struct nxcap_flow_key nxcap_flow_key_t;
+struct nxcap_flow_key {
     uint8_t inverted; // This defines if the key was inverted (src -> dst, dst -> src)
 
     uint32_t ip_v;
@@ -48,16 +48,16 @@ struct nfcap_flow_key {
     uint32_t hash; // Hash of the key, computed from the IPs, ports and protocol
 };
 
-nfcap_flow_key_t *nfcap_flow_key_init();
-int nfcap_flow_key_equals(void *a, void *b);
-int nfcap_flow_key_from_packet(nfcap_flow_key_t *key, const u_char *packet, size_t *offset, void **l3_hdr, void **l4_hdr);
+nxcap_flow_key_t *nxcap_flow_key_init();
+int nxcap_flow_key_equals(void *a, void *b);
+int nxcap_flow_key_from_packet(nxcap_flow_key_t *key, const u_char *packet, size_t *offset, void **l3_hdr, void **l4_hdr);
 
-void* nfcap_flow_key_set_ip_hdr(nfcap_flow_key_t *key, const u_char *packet, size_t *offset);
-void *nfcap_flow_key_set_l4_hdr(nfcap_flow_key_t *key, const u_char *packet, size_t *offset);
-void nfcap_flow_key_commit(nfcap_flow_key_t *key);
+void* nxcap_flow_key_set_ip_hdr(nxcap_flow_key_t *key, const u_char *packet, size_t *offset);
+void *nxcap_flow_key_set_l4_hdr(nxcap_flow_key_t *key, const u_char *packet, size_t *offset);
+void nxcap_flow_key_commit(nxcap_flow_key_t *key);
 
-uint32_t nfcap_flow_key_hash(nfcap_flow_key_t *key, size_t _unused);
+uint32_t nxcap_flow_key_hash(nxcap_flow_key_t *key, size_t _unused);
 
-void nfcap_flow_key_print(const nfcap_flow_key_t *key);
+void nxcap_flow_key_print(const nxcap_flow_key_t *key);
 
 #endif // FLOW_KEY_H

@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: ipv6.h
  *
  * Description: Flow-oriented network capture library
@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <asm/byteorder.h>
 #include <netinet/ip6.h>
-#include <nfcap_types.h>
+#include <nxcap_types.h>
 
 typedef uint32_t ipv6_addr_t[4]; // IPv6 address
 
@@ -52,8 +52,8 @@ struct ipv6_hdr {
     ipv6_addr_t daddr; // Destination address
 } __attribute__ ((__packed__));
 
-ipv6_hdr_t* nfcap_proto_unpack_ipv6(const u_char *packet, size_t *offset);
-void nfcap_proto_ipv6_print(ipv6_addr_t ip);
+ipv6_hdr_t* nxcap_proto_unpack_ipv6(const u_char *packet, size_t *offset);
+void nxcap_proto_ipv6_print(ipv6_addr_t ip);
 
 
 #endif // IPV6_H

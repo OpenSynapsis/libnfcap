@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: ipv4.c
  *
  * Description: Flow-oriented network capture library
@@ -26,7 +26,7 @@
 #include <proto/ipv4.h>
 #include <stdio.h>
 
-ipv4_hdr_t* nfcap_proto_unpack_ipv4(const u_char *packet, size_t *offset) {
+ipv4_hdr_t* nxcap_proto_unpack_ipv4(const u_char *packet, size_t *offset) {
     ipv4_hdr_t *ipv4_hdr;
     ipv4_hdr = (ipv4_hdr_t *) (packet + *offset);
 
@@ -35,7 +35,7 @@ ipv4_hdr_t* nfcap_proto_unpack_ipv4(const u_char *packet, size_t *offset) {
     return ipv4_hdr;
 }
 
-void nfcap_proto_ipv4_print(uint32_t ip) {
+void nxcap_proto_ipv4_print(uint32_t ip) {
     printf("%u.%u.%u.%u", 
         ip & 0xFF,
         (ip >> 8) & 0xFF, 

@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: pcap_read.h
  *
  * Description: Flow-oriented network capture library

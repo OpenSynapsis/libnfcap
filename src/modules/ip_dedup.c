@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: duplicates.c
  *
  * Description: Flow-oriented network capture library
@@ -28,14 +28,14 @@
 #include <utils/timeval.h>
 #include <string.h>
 
-int nfcap_flow_manager_remove_duplicates(
-    nfcap_flow_context_t *flow_context,
+int nxcap_flow_manager_remove_duplicates(
+    nxcap_flow_context_t *flow_context,
     int dup_time_window,
     int dup_packet_window
 ) {
-    nfcap_pkthdr_t *pkt = flow_context->pkt_list;
-    nfcap_pkthdr_t *prev = NULL;
-    nfcap_pkthdr_t *next = NULL;
+    nxcap_pkthdr_t *pkt = flow_context->pkt_list;
+    nxcap_pkthdr_t *prev = NULL;
+    nxcap_pkthdr_t *next = NULL;
 
     int ret = 0;
 
@@ -76,7 +76,7 @@ int nfcap_flow_manager_remove_duplicates(
                 continue;
             }
 
-            if (prev->hash != NULL && memcmp(prev->hash, pkt->hash, NFCAP_HASH_SIZE) == 0) {
+            if (prev->hash != NULL && memcmp(prev->hash, pkt->hash, NXCAP_HASH_SIZE) == 0) {
                 // Duplicate found, remove the packet
                 prev->next = pkt->next;
                 if (pkt->next != NULL) {

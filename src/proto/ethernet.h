@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: ethernet.h
  *
  * Description: Flow-oriented network capture library
@@ -27,7 +27,7 @@
 #define ETHERNET_H
 
 #include <stdint.h>
-#include <nfcap_types.h>
+#include <nxcap_types.h>
 
 #define ETHER_ADDR_LEN 6
 #define ETHER_HEADER_LEN 14
@@ -41,6 +41,6 @@ struct ether_hdr {
     uint16_t ether_type;
 } __attribute__ ((__packed__));
 
-ether_hdr_t* nfcap_proto_unpack_ethernet(const u_char *packet, size_t *offset);
+ether_hdr_t* nxcap_proto_unpack_ethernet(const u_char *packet, size_t *offset);
 
 #endif // ETHERNET_H

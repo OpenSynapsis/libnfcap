@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: flow_context.h
  *
  * Description: Flow-oriented network capture library
@@ -35,25 +35,25 @@
 extern "C" {
 #endif
 
-typedef struct nfcap_flow_context nfcap_flow_context_t;
+typedef struct nxcap_flow_context nxcap_flow_context_t;
 
 #include <core/packet/packet_record.h>
 
-enum nfcap_flow_state {
-    NFCAP_FLOW_STATE_CON_UNKNOWN = 0,
-    NFCAP_FLOW_STATE_CON_CLOSED,
-    NFCAP_FLOW_STATE_CON_ATTEMPT,
-    NFCAP_FLOW_STATE_CON_REFUSED,
-    NFCAP_FLOW_STATE_CON_ESTABLISHED,
-    NFCAP_FLOW_STATE_CON_CLOSING
+enum nxcap_flow_state {
+    NXCAP_FLOW_STATE_CON_UNKNOWN = 0,
+    NXCAP_FLOW_STATE_CON_CLOSED,
+    NXCAP_FLOW_STATE_CON_ATTEMPT,
+    NXCAP_FLOW_STATE_CON_REFUSED,
+    NXCAP_FLOW_STATE_CON_ESTABLISHED,
+    NXCAP_FLOW_STATE_CON_CLOSING
 };
-typedef enum nfcap_flow_state nfcap_flow_state_t;
+typedef enum nxcap_flow_state nxcap_flow_state_t;
 
 
-struct nfcap_flow_context {
+struct nxcap_flow_context {
     uint32_t hash;
-    nfcap_flow_key_t key;
-    nfcap_flow_state_t state;
+    nxcap_flow_key_t key;
+    nxcap_flow_state_t state;
     uint8_t expired;
 
     struct timeval start_time;
@@ -74,14 +74,14 @@ struct nfcap_flow_context {
     };
 
     uint32_t pkt_count;
-    nfcap_pkthdr_t *pkt_list;
-    nfcap_pkthdr_t *pkt_last;
+    nxcap_pkthdr_t *pkt_list;
+    nxcap_pkthdr_t *pkt_last;
 
     void *checker;
 
     // Chain flow context in creation order
-    nfcap_flow_context_t *next;
-    nfcap_flow_context_t *prev;
+    nxcap_flow_context_t *next;
+    nxcap_flow_context_t *prev;
 
     uint32_t init_seq;
     uint32_t dup_packet_count;
@@ -91,14 +91,14 @@ struct nfcap_flow_context {
 }
 #endif
 
-int nfcap_flow_context_init(nfcap_flow_context_t *flow_context);
-int nfcap_flow_context_create(nfcap_flow_context_t **flow_context, nfcap_flow_key_t *key);
-int nfcap_flow_context_destroy(nfcap_flow_context_t *flow_context);
+int nxcap_flow_context_init(nxcap_flow_context_t *flow_context);
+int nxcap_flow_context_create(nxcap_flow_context_t **flow_context, nxcap_flow_key_t *key);
+int nxcap_flow_context_destroy(nxcap_flow_context_t *flow_context);
 
-int nfcap_flow_context_insert_packet(nfcap_flow_context_t *flow_context, nfcap_pkthdr_t *pkt);
+int nxcap_flow_context_insert_packet(nxcap_flow_context_t *flow_context, nxcap_pkthdr_t *pkt);
 
-size_t nfcap_flow_context_dump(nfcap_flow_context_t *flow_context, FILE* file);
+size_t nxcap_flow_context_dump(nxcap_flow_context_t *flow_context, FILE* file);
 
-int nfcap_flow_context_update_state(nfcap_flow_context_t *flow_context);
+int nxcap_flow_context_update_state(nxcap_flow_context_t *flow_context);
 
 #endif // FLOW_CONTEXT_H

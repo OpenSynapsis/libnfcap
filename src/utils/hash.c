@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: hash.c
  *
  * Description: Flow-oriented network capture library
@@ -28,13 +28,13 @@
 #include <stdio.h>
 #include <string.h>
 
-EVP_MD_CTX *nfcap_utils_hash_init() {
+EVP_MD_CTX *nxcap_utils_hash_init() {
     EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
     if (mdctx == NULL) {
         return NULL; // Memory allocation failed
     }
 
-    if (EVP_DigestInit_ex(mdctx, NFCAP_HASH_TYPE, NULL) != 1) {
+    if (EVP_DigestInit_ex(mdctx, NXCAP_HASH_TYPE, NULL) != 1) {
         EVP_MD_CTX_free(mdctx);
         return NULL; // Initialization failed
     }
@@ -55,7 +55,7 @@ static void _dump_buffer(const uint8_t *data, size_t len) {
     }
 }
 
-int nfcap_utils_hash_update(EVP_MD_CTX *mdctx, const uint8_t *data, size_t len) {
+int nxcap_utils_hash_update(EVP_MD_CTX *mdctx, const uint8_t *data, size_t len) {
     //_dump_buffer(data, len); // Dump the buffer for debugging
     if (EVP_DigestUpdate(mdctx, (void *)data, len) != 1) {
         EVP_MD_CTX_free(mdctx);
@@ -64,7 +64,7 @@ int nfcap_utils_hash_update(EVP_MD_CTX *mdctx, const uint8_t *data, size_t len) 
     return 0; // Update successful
 }
 
-int nfcap_utils_hash_get(EVP_MD_CTX *mdctx, packet_hash_t hash) {
+int nxcap_utils_hash_get(EVP_MD_CTX *mdctx, packet_hash_t hash) {
     unsigned int hash_len;
     if (EVP_DigestFinal_ex(mdctx, hash, &hash_len) != 1) {
         EVP_MD_CTX_free(mdctx);
@@ -76,28 +76,28 @@ int nfcap_utils_hash_get(EVP_MD_CTX *mdctx, packet_hash_t hash) {
     return 0; // Success
 }
 
-int nfcap_utils_hash(const uint8_t *data, size_t offset, size_t len, packet_hash_t hash) {
-    EVP_MD_CTX *mdctx = nfcap_utils_hash_init();
+int nxcap_utils_hash(const uint8_t *data, size_t offset, size_t len, packet_hash_t hash) {
+    EVP_MD_CTX *mdctx = nxcap_utils_hash_init();
 
-    if (nfcap_utils_hash_update(mdctx, (void *)data + offset, len) != 0) {
+    if (nxcap_utils_hash_update(mdctx, (void *)data + offset, len) != 0) {
         fprintf(stderr, "Error: Failed to update hash context\n");
         return -1;
     }
 
-    nfcap_utils_hash_get(mdctx, hash);
+    nxcap_utils_hash_get(mdctx, hash);
     return 0; // Success
 }
 
-int nfcap_utils_hash_to_string(packet_hash_t hash, char *str) {
-    memset(str, 0, NFCAP_HASH_STR_SIZE);
-    for (int i = 0; i < NFCAP_HASH_SIZE; i++) {
+int nxcap_utils_hash_to_string(packet_hash_t hash, char *str) {
+    memset(str, 0, NXCAP_HASH_STR_SIZE);
+    for (int i = 0; i < NXCAP_HASH_SIZE; i++) {
         sprintf(str + (i * 2), "%02x", hash[i]);
     }
     return 0;
 }
 
-void nfcap_utils_hash_print(packet_hash_t hash) {
-    char hash_str[NFCAP_HASH_STR_SIZE];
-    nfcap_utils_hash_to_string(hash, hash_str);
+void nxcap_utils_hash_print(packet_hash_t hash) {
+    char hash_str[NXCAP_HASH_STR_SIZE];
+    nxcap_utils_hash_to_string(hash, hash_str);
     printf("Hash: %s\n", hash_str);
 }

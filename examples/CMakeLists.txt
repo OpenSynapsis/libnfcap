@@ -18,8 +18,8 @@ foreach(EXAMPLE ${EXAMPLES})
     # Add the example
     add_executable(${EXAMPLE_NAME} ${EXAMPLE_SOURCES})
 
-    # Link the library pcap and nfcap
-    target_link_libraries(${EXAMPLE_NAME} nfcap pcap)
+    # Link the library pcap and nxcap
+    target_link_libraries(${EXAMPLE_NAME} nxcap pcap)
 
     # Set the output directory
     set_target_properties(${EXAMPLE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/examples)

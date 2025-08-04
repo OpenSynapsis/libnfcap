@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: metrics.h
  *
  * Description: Flow-oriented network capture library

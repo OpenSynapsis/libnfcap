@@ -1,0 +1,52 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"ip.h": "c",
+			"ethernet.h": "c",
+			"ip6.h": "c",
+			"packet_handler.h": "c",
+			"udp.h": "c",
+			"tcp.h": "c",
+			"nxcap_types.h": "c",
+			"packet_record.h": "c",
+			"flow_manager.h": "c",
+			"flow_key.h": "c",
+			"mmh3.h": "c",
+			"stdlib.h": "c",
+			"if_ether.h": "c",
+			"stdint.h": "c",
+			"ipv4.h": "c",
+			"string.h": "c",
+			"pkt_sched.h": "c",
+			"byteorder.h": "c",
+			"flow_hashtable.h": "c",
+			"flow_context.h": "c",
+			"pcap.h": "c",
+			"*.inc": "cpp",
+			"c-wrapper.h": "c",
+			"file.h": "c",
+			"array": "c",
+			"string_view": "c",
+			"initializer_list": "c",
+			"nxcap.h": "c",
+			"duplicates.h": "c",
+			"time.h": "c",
+			"dlt_ssl.h": "c",
+			"hash.h": "c",
+			"evp.h": "c",
+			"timeval.h": "c",
+			"stdio.h": "c",
+			"getopt.h": "c",
+			"config.h": "c",
+			"parse_args.h": "c",
+			"flow_list.h": "c",
+			"hashtable.h": "c",
+			"siphash.h": "c"
+		}
+	}
+}

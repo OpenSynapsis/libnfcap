@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: ipv4.h
  *
  * Description: Flow-oriented network capture library
@@ -31,7 +31,7 @@
 
 #include <asm/byteorder.h>
 
-#include <nfcap_types.h>
+#include <nxcap_types.h>
 
 typedef struct ipv4_hdr ipv4_hdr_t;
 struct ipv4_hdr {
@@ -55,7 +55,7 @@ struct ipv4_hdr {
     uint32_t daddr;
 } __attribute__ ((__packed__));
 
-ipv4_hdr_t* nfcap_proto_unpack_ipv4(const u_char *packet, size_t *offset);
-void nfcap_proto_ipv4_print(uint32_t ip);
+ipv4_hdr_t* nxcap_proto_unpack_ipv4(const u_char *packet, size_t *offset);
+void nxcap_proto_ipv4_print(uint32_t ip);
 
 #endif // IPV4_H
