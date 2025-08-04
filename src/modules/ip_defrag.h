@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnxcap
  * File: ip_defrag.h
  *
  * Description: Flow-oriented network capture library
@@ -37,60 +37,60 @@
 #define OFFSET_IN_BYTES(flags_offset) ((flags_offset & OFFSET_MASK) * 8) // Fragment offset in bytes
 #define IS_IP_FRAGMENT(flags_offset) (MF_IS_SET(flags_offset) || (flags_offset & OFFSET_MASK) > 0)
 
-#define NFCAP_IP_DEFRAG_CTX_BUFFER_SIZE 4096 // Default buffer size for reassembly
+#define NXCAP_IP_DEFRAG_CTX_BUFFER_SIZE 4096 // Default buffer size for reassembly
 
 typedef enum {
     IP_DEFRAG_PACKET_FIRST = 0, // First fragment of the packet
     IP_DEFRAG_PACKET_MIDDLE = 1,// Middle fragment of the packet
     IP_DEFRAG_PACKET_LAST = 2,  // Last fragment of the packet
-} nfcap_ip_defrag_packet_type_t;
+} nxcap_ip_defrag_packet_type_t;
 
-typedef struct nfcap_ip_defrag {
+typedef struct nxcap_ip_defrag {
     hashtable_t *ht; // Hashtable to store fragments
-} nfcap_ip_defrag_t;
+} nxcap_ip_defrag_t;
 
-typedef struct nfcap_ip_defrag_key {
+typedef struct nxcap_ip_defrag_key {
     uint32_t src_ip;        // Source IP address
     uint32_t dst_ip;        // Destination IP address
     uint16_t id;            // Fragment ID
     uint8_t protocol;       // Protocol (e.g., TCP, UDP)
     uint8_t _reserved;       // Reserved for future use
-} nfcap_ip_defrag_key_t;
+} nxcap_ip_defrag_key_t;
 
-typedef struct nfcap_ip_defrag_ctx {
-    nfcap_ip_defrag_key_t *key; // Key for the fragment entry
-    nfcap_flow_key_t *flow_key; // Flow key associated with the fragment
+typedef struct nxcap_ip_defrag_ctx {
+    nxcap_ip_defrag_key_t *key; // Key for the fragment entry
+    nxcap_flow_key_t *flow_key; // Flow key associated with the fragment
     size_t total_length; // Total length of the reassembled packet
 
-    nfcap_pkthdr_t *pkthdr;
+    nxcap_pkthdr_t *pkthdr;
 
     uint8_t *buffer;
     size_t buffer_len; // Length of the buffer for reassembly
 
-} nfcap_ip_defrag_ctx_t;
+} nxcap_ip_defrag_ctx_t;
 
-nfcap_ip_defrag_t *nfcap_ip_defrag_create();
-void nfcap_ip_defrag_destroy(nfcap_ip_defrag_t *defrag);
+nxcap_ip_defrag_t *nxcap_ip_defrag_create();
+void nxcap_ip_defrag_destroy(nxcap_ip_defrag_t *defrag);
 
-nfcap_ip_defrag_key_t *nfcap_ip_defrag_key_create(
+nxcap_ip_defrag_key_t *nxcap_ip_defrag_key_create(
     uint32_t src_ip, 
     uint32_t dst_ip, 
     uint16_t id, 
     uint8_t protocol
 );
 
-int nfcap_ip_defrag_packet_handler(
-    nfcap_ip_defrag_t *defrag, 
-    nfcap_ip_defrag_key_t *key,
-    nfcap_flow_key_t **flow_key,
-    nfcap_pkthdr_t **pkthdr,
+int nxcap_ip_defrag_packet_handler(
+    nxcap_ip_defrag_t *defrag, 
+    nxcap_ip_defrag_key_t *key,
+    nxcap_flow_key_t **flow_key,
+    nxcap_pkthdr_t **pkthdr,
     uint8_t *data,
     size_t data_len
 );
 
-int nfcap_ip_defrag_reassemble(
-    nfcap_ip_defrag_t *defrag, 
-    nfcap_ip_defrag_key_t *key
+int nxcap_ip_defrag_reassemble(
+    nxcap_ip_defrag_t *defrag, 
+    nxcap_ip_defrag_key_t *key
 );
 
 #endif // IP_DEFRAG_H

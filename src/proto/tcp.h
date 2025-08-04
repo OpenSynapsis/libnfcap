@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: tcp.h
  *
  * Description: Flow-oriented network capture library
@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <asm/byteorder.h>
 
-#include <nfcap_types.h>
+#include <nxcap_types.h>
 
 typedef struct tcp_hdr tcp_hdr_t;
 struct tcp_hdr {
@@ -78,7 +78,7 @@ struct tcp_hdr {
     uint16_t urgent_pointer;
 } __attribute__ ((__packed__));
 
-tcp_hdr_t* nfcap_proto_unpack_tcp(const u_char *packet, size_t *offset);
+tcp_hdr_t* nxcap_proto_unpack_tcp(const u_char *packet, size_t *offset);
 
 enum {
     TCP_STATE_MACHINE_SUCCESS = 0,
@@ -113,7 +113,7 @@ enum tcp_connection_state {
     TCP_STATE_TIME_WAIT
 };
 
-char* nfcap_proto_tcp_state_to_string(tcp_connection_state_t state);
+char* nxcap_proto_tcp_state_to_string(tcp_connection_state_t state);
 
 typedef struct tcp_connection_state_machine tcp_connection_state_machine_t;
 struct tcp_connection_state_machine {
@@ -122,13 +122,13 @@ struct tcp_connection_state_machine {
     uint32_t ack_num;
 };
 
-int nfcap_proto_tcp_state_machine_send(
+int nxcap_proto_tcp_state_machine_send(
     tcp_connection_state_machine_t *state_machine,
     uint8_t flags,
     tcp_connection_state_t peer_state
 );
 
-int nfcap_proto_tcp_state_machine_recv(
+int nxcap_proto_tcp_state_machine_recv(
     tcp_connection_state_machine_t *state_machine,
     uint8_t flags,
     tcp_connection_state_t peer_state
@@ -140,8 +140,8 @@ struct tcp_connection_checker {
     tcp_connection_state_machine_t server_sm;
 };
 
-int nfcap_proto_tcp_connection_checker_init(tcp_connection_checker_t **checker);
-int nfcap_proto_tcp_connection_checker_update(
+int nxcap_proto_tcp_connection_checker_init(tcp_connection_checker_t **checker);
+int nxcap_proto_tcp_connection_checker_update(
     tcp_connection_checker_t *checker,
     uint8_t flags,
     uint8_t direction

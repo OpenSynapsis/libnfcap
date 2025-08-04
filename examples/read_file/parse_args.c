@@ -1,5 +1,5 @@
 /*
- * Project: LibNFCap
+ * Project: libnxcap
  * File: parse_args.c
  *
  * Description: Flow-oriented network capture library
@@ -50,12 +50,12 @@ void print_usage(char *argv0) {
     printf("  -h, --help     display this help and exit\n");
     printf("  -v, --version  output version information and exit\n");
     printf("  -r, --read     read a network packet capture file (.pcap|.pcapng)\n");
-    printf("  -w, --write    write a NetGlyph-Capture file (.nfcap)\n");
+    printf("  -w, --write    write a NetGlyph-Capture file (.nxcap)\n");
     printf("  -d, --dup-time-window     set the duplicate time window (in seconds)\n");
     printf("  -p, --dup-packet-window     set the duplicate packet window (in packets)\n");
 }
 
-void check_mandatory_opts(struct nfcap_args *opts) {
+void check_mandatory_opts(struct nxcap_args *opts) {
     if(opts->input_filename == NULL) {
         fprintf(stderr, "Error: missing mandatory option --read\n");
         exit(EXIT_FAILURE);
@@ -69,7 +69,7 @@ void print_version() {
     printf("\n");
 }
 
-void parse_args(int argc, char **argv, struct nfcap_args *opts) {
+void parse_args(int argc, char **argv, struct nxcap_args *opts) {
     int end_of_opts = 1;
     while(end_of_opts) {
         int option_index = 0;

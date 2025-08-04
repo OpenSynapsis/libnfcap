@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: flow_manager.h
  *
  * Description: Flow-oriented network capture library
@@ -40,8 +40,8 @@ enum {
 #include <core/packet/packet_record.h>
 #include <modules/ip_defrag.h>
 
-typedef struct nfcap_flow_manager_metrics nfcap_flow_manager_metrics_t;
-struct nfcap_flow_manager_metrics {
+typedef struct nxcap_flow_manager_metrics nxcap_flow_manager_metrics_t;
+struct nxcap_flow_manager_metrics {
     uint32_t flow_count;
     uint32_t udp_flow_count;
     uint32_t tcp_flow_count;
@@ -76,36 +76,36 @@ struct nfcap_flow_manager_metrics {
     uint64_t total_payload_bytes;
 
     uint32_t dup_packet_count;
-    size_t written_nfcap_size;
-    uint32_t written_nfcap_flows;
+    size_t written_nxcap_size;
+    uint32_t written_nxcap_flows;
 };
 
-typedef struct nfcap_flow_manager nfcap_flow_manager_t;
-struct nfcap_flow_manager {
+typedef struct nxcap_flow_manager nxcap_flow_manager_t;
+struct nxcap_flow_manager {
     hashtable_t *ht;
 
-    nfcap_flow_context_t *first_created_flow;
-    nfcap_flow_context_t *last_created_flow;
+    nxcap_flow_context_t *first_created_flow;
+    nxcap_flow_context_t *last_created_flow;
 
     int datalink_type;
 
-    nfcap_ip_defrag_t *ip_defrag;
+    nxcap_ip_defrag_t *ip_defrag;
 
     double cpu_time_per_packet;
     uint32_t packet_count;
 
-    nfcap_flow_manager_metrics_t metrics;
+    nxcap_flow_manager_metrics_t metrics;
     FILE *input_file;
     char *output_filename;
     int dup_time_window;
     int dup_packet_window;
 };
 
-int nfcap_flow_manager_init(nfcap_flow_manager_t *flow_manager);
-int nfcap_flow_manager_destroy(nfcap_flow_manager_t *flow_manager);
+int nxcap_flow_manager_init(nxcap_flow_manager_t *flow_manager);
+int nxcap_flow_manager_destroy(nxcap_flow_manager_t *flow_manager);
 
-int nfcap_flow_manager_packet_handler(nfcap_flow_manager_t *flow_manager, const struct pcap_pkthdr *header, const u_char *packet);
+int nxcap_flow_manager_packet_handler(nxcap_flow_manager_t *flow_manager, const struct pcap_pkthdr *header, const u_char *packet);
 
-int nfcap_flow_manager_dump(nfcap_flow_manager_t *flow_manager);
+int nxcap_flow_manager_dump(nxcap_flow_manager_t *flow_manager);
 
 #endif // FLOW_MANAGER_H

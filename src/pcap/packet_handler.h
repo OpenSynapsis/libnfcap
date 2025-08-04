@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: packet_handler.h
  *
  * Description: Flow-oriented network capture library

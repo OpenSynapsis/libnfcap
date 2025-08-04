@@ -1,5 +1,5 @@
 /*
- * Project: LibNFCap
+ * Project: libnxcap
  * File: main.c
  *
  * Description: Flow-oriented network capture library
@@ -27,10 +27,10 @@
 #include <stdlib.h>
 #include "parse_args.h"
 
-#include <nfcap.h>
+#include <nxcap.h>
 
 int main(int argc, char* argv[]) {
-    struct nfcap_args *opts = calloc(1, sizeof(struct nfcap_args));
+    struct nxcap_args *opts = calloc(1, sizeof(struct nxcap_args));
     parse_args(argc, argv, opts);
 
     read_pcap_file(opts->input_filename, opts->output_filename, opts->dup_time_window, opts->dup_packet_window);

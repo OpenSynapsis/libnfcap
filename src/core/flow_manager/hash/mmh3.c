@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: mmh3.c
  *
  * Description: Flow-oriented network capture library

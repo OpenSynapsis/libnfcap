@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: udp.h
  *
  * Description: Flow-oriented network capture library
@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <asm/byteorder.h>
 
-#include <nfcap_types.h>
+#include <nxcap_types.h>
 
 typedef struct udp_hdr udp_hdr_t;
 struct udp_hdr {
@@ -39,6 +39,6 @@ struct udp_hdr {
     uint16_t checksum;
 } __attribute__ ((__packed__));
 
-udp_hdr_t* nfcap_proto_unpack_udp(const u_char *packet, size_t *offset);
+udp_hdr_t* nxcap_proto_unpack_udp(const u_char *packet, size_t *offset);
 
 #endif // UDP_H

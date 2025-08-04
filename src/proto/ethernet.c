@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: ethernet.c
  *
  * Description: Flow-oriented network capture library
@@ -25,7 +25,7 @@
 
 #include <proto/ethernet.h>
 
-ether_hdr_t* nfcap_proto_unpack_ethernet(const u_char *packet, size_t *offset) {
+ether_hdr_t* nxcap_proto_unpack_ethernet(const u_char *packet, size_t *offset) {
     ether_hdr_t *ether_hdr;
 
     ether_hdr = (ether_hdr_t *) (packet + *offset);

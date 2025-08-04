@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: flow_context.c
  *
  * Description: Flow-oriented network capture library
@@ -28,16 +28,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <nfcap/file.h>
-#include <nfcap/protobuf/c-wrapper.h>
+#include <nxcap/file.h>
+#include <nxcap/protobuf/c-wrapper.h>
 
-int nfcap_flow_context_init(nfcap_flow_context_t *flow_context) {
-    memset(flow_context, 0, sizeof(nfcap_flow_context_t));
+int nxcap_flow_context_init(nxcap_flow_context_t *flow_context) {
+    memset(flow_context, 0, sizeof(nxcap_flow_context_t));
     return 0;
 }
 
-int nfcap_flow_context_create(nfcap_flow_context_t **flow_context, nfcap_flow_key_t *key) {
-    *flow_context = calloc(1, sizeof(nfcap_flow_context_t));
+int nxcap_flow_context_create(nxcap_flow_context_t **flow_context, nxcap_flow_key_t *key) {
+    *flow_context = calloc(1, sizeof(nxcap_flow_context_t));
     if (*flow_context == NULL) {
         return -1; // Memory allocation error
     }
@@ -61,9 +61,9 @@ int nfcap_flow_context_create(nfcap_flow_context_t **flow_context, nfcap_flow_ke
     return 0;
 }
 
-int nfcap_flow_context_destroy(nfcap_flow_context_t *flow_context) {
-    nfcap_pkthdr_t *pkt = flow_context->pkt_list;
-    nfcap_pkthdr_t *next = NULL;
+int nxcap_flow_context_destroy(nxcap_flow_context_t *flow_context) {
+    nxcap_pkthdr_t *pkt = flow_context->pkt_list;
+    nxcap_pkthdr_t *next = NULL;
 
     while (pkt != NULL) {
         next = pkt->next;
@@ -76,7 +76,7 @@ int nfcap_flow_context_destroy(nfcap_flow_context_t *flow_context) {
     return 0;
 }
 
-int nfcap_flow_context_insert_packet(nfcap_flow_context_t *flow_context, nfcap_pkthdr_t *pkt) {
+int nxcap_flow_context_insert_packet(nxcap_flow_context_t *flow_context, nxcap_pkthdr_t *pkt) {
     if (flow_context->pkt_list == NULL) { // First packet
         flow_context->pkt_list = pkt;
         flow_context->start_time = pkt->ts;
@@ -91,7 +91,7 @@ int nfcap_flow_context_insert_packet(nfcap_flow_context_t *flow_context, nfcap_p
     return 0;
 }
 
-int nfcap_flow_context_update_state(nfcap_flow_context_t *flow_context) {
+int nxcap_flow_context_update_state(nxcap_flow_context_t *flow_context) {
     switch (flow_context->key.protocol) {
         case IPPROTO_TCP:
             tcp_connection_state_machine_t *client_sm = &((tcp_connection_checker_t *)flow_context->checker)->client_sm;
@@ -100,12 +100,12 @@ int nfcap_flow_context_update_state(nfcap_flow_context_t *flow_context) {
                 client_sm->state == TCP_STATE_ESTABLISHED &&
                 server_sm->state == TCP_STATE_ESTABLISHED
             ) {
-                flow_context->state = NFCAP_FLOW_STATE_CON_ESTABLISHED;
+                flow_context->state = NXCAP_FLOW_STATE_CON_ESTABLISHED;
             } else if (
                 (client_sm->state == TCP_STATE_CLOSED || client_sm->state == TCP_STATE_TIME_WAIT || client_sm->state == TCP_STATE_LISTEN) &&
                 (server_sm->state == TCP_STATE_CLOSED || server_sm->state == TCP_STATE_TIME_WAIT || server_sm->state == TCP_STATE_LISTEN)
             ) {
-                flow_context->state = NFCAP_FLOW_STATE_CON_CLOSED;
+                flow_context->state = NXCAP_FLOW_STATE_CON_CLOSED;
             }
             break;
         default:
@@ -113,13 +113,13 @@ int nfcap_flow_context_update_state(nfcap_flow_context_t *flow_context) {
     }
 }
 
-size_t nfcap_flow_context_dump(nfcap_flow_context_t *flow_context, FILE* file) {
+size_t nxcap_flow_context_dump(nxcap_flow_context_t *flow_context, FILE* file) {
     size_t serialized_flow_context_size = 0;
 
     // Serialize the flow context to a file
     if (file != NULL) {
         char * serialized_flow_context;
-        int ret = nfcap_protobuf_wrapper_create_flow_record(
+        int ret = nxcap_protobuf_wrapper_create_flow_record(
             &serialized_flow_context,
             &serialized_flow_context_size,
             flow_context
@@ -129,7 +129,7 @@ size_t nfcap_flow_context_dump(nfcap_flow_context_t *flow_context, FILE* file) {
             return 0;
         }
 
-        nfcap_file_append_record(file, serialized_flow_context, serialized_flow_context_size);
+        nxcap_file_append_record(file, serialized_flow_context, serialized_flow_context_size);
 
         free(serialized_flow_context);
     }

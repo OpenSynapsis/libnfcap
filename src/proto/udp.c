@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: udp.c
  *
  * Description: Flow-oriented network capture library
@@ -25,7 +25,7 @@
 
 #include <proto/udp.h>
 
-udp_hdr_t* nfcap_proto_unpack_udp(const u_char *packet, size_t *offset) {
+udp_hdr_t* nxcap_proto_unpack_udp(const u_char *packet, size_t *offset) {
     udp_hdr_t *udp_hdr = (udp_hdr_t *)(packet + *offset);
     *offset += sizeof(udp_hdr_t);
     return udp_hdr;

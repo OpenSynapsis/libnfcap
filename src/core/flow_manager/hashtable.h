@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: hashtable.h
  *
  * Description: Flow-oriented network capture library

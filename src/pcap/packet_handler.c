@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: packet_handler.c
  *
  * Description: Flow-oriented network capture library
@@ -24,7 +24,7 @@
  */
 
 #include <pcap/packet_handler.h>
-#include <nfcap_types.h>
+#include <nxcap_types.h>
 #include <core/flow_manager/flow_manager.h>
 
 #include <stdlib.h>
@@ -72,14 +72,14 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char
     double cpu_time_used;
     int ret = 0;
     
-    nfcap_flow_manager_t *flow_manager = (nfcap_flow_manager_t *) args;
+    nxcap_flow_manager_t *flow_manager = (nxcap_flow_manager_t *) args;
 
     METRICS_MEASURE_CPU_TIME_INIT;
     
     // Measure CPU time
     METRICS_MEASURE_CPU_TIME(
         do {
-            ret = nfcap_flow_manager_packet_handler(flow_manager, header, packet);
+            ret = nxcap_flow_manager_packet_handler(flow_manager, header, packet);
         } while (ret == FLOW_MANAGER_REPASS),
         flow_manager->metrics.cpu_time_total
     );
@@ -95,6 +95,6 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char
     
 
     if (ret != 0) {
-        //fprintf(stderr, "Error: nfcap_flow_manager_packet_handler failed [%d]\n", ret);
+        //fprintf(stderr, "Error: nxcap_flow_manager_packet_handler failed [%d]\n", ret);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: timeval.c
  *
  * Description: Flow-oriented network capture library

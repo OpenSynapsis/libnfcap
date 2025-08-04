@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: tcp.c
  *
  * Description: Flow-oriented network capture library
@@ -25,7 +25,7 @@
 
 #include <proto/tcp.h>
 
-tcp_hdr_t* nfcap_proto_unpack_tcp(const u_char *packet, size_t *offset) {
+tcp_hdr_t* nxcap_proto_unpack_tcp(const u_char *packet, size_t *offset) {
     tcp_hdr_t *tcp_hdr;
     tcp_hdr = (tcp_hdr_t *) (packet + *offset);
 
@@ -34,7 +34,7 @@ tcp_hdr_t* nfcap_proto_unpack_tcp(const u_char *packet, size_t *offset) {
     return tcp_hdr;
 }
 
-int nfcap_proto_tcp_state_machine_send(
+int nxcap_proto_tcp_state_machine_send(
     tcp_connection_state_machine_t *state_machine,
     uint8_t flags,
     tcp_connection_state_t peer_state
@@ -117,7 +117,7 @@ int nfcap_proto_tcp_state_machine_send(
     return 0;
 }
 
-int nfcap_proto_tcp_state_machine_recv(
+int nxcap_proto_tcp_state_machine_recv(
     tcp_connection_state_machine_t *state_machine,
     uint8_t flags,
     tcp_connection_state_t peer_state
@@ -195,7 +195,7 @@ int nfcap_proto_tcp_state_machine_recv(
     return ret;
 }
 
-int nfcap_proto_tcp_connection_checker_init(tcp_connection_checker_t **checker) {
+int nxcap_proto_tcp_connection_checker_init(tcp_connection_checker_t **checker) {
     *checker = calloc(1, sizeof(tcp_connection_checker_t));
     (*checker)->client_sm.state = TCP_STATE_CLOSED;
     (*checker)->server_sm.state = TCP_STATE_LISTEN;
@@ -203,23 +203,23 @@ int nfcap_proto_tcp_connection_checker_init(tcp_connection_checker_t **checker) 
     return 0;
 }
 
-int nfcap_proto_tcp_connection_checker_update(
+int nxcap_proto_tcp_connection_checker_update(
     tcp_connection_checker_t *checker,
     uint8_t flags,
     uint8_t direction
 ) {
     int ret = 0;
     if (direction == 0) {
-        nfcap_proto_tcp_state_machine_send(&checker->client_sm, flags, checker->server_sm.state);
-        ret = nfcap_proto_tcp_state_machine_recv(&checker->server_sm, flags, checker->client_sm.state);
+        nxcap_proto_tcp_state_machine_send(&checker->client_sm, flags, checker->server_sm.state);
+        ret = nxcap_proto_tcp_state_machine_recv(&checker->server_sm, flags, checker->client_sm.state);
     } else {
-        nfcap_proto_tcp_state_machine_send(&checker->server_sm, flags, checker->client_sm.state);
-        ret = nfcap_proto_tcp_state_machine_recv(&checker->client_sm, flags, checker->server_sm.state);
+        nxcap_proto_tcp_state_machine_send(&checker->server_sm, flags, checker->client_sm.state);
+        ret = nxcap_proto_tcp_state_machine_recv(&checker->client_sm, flags, checker->server_sm.state);
     }
     return ret;
 }
 
-char* nfcap_proto_tcp_state_to_string(tcp_connection_state_t state) {
+char* nxcap_proto_tcp_state_to_string(tcp_connection_state_t state) {
     switch (state) {
         case TCP_STATE_CLOSED:
             return "CLOSED";

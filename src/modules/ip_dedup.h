@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: duplicates.h
  *
  * Description: Flow-oriented network capture library
@@ -28,8 +28,8 @@
 
 #include <core/flow/flow_context.h>
 
-int nfcap_flow_manager_remove_duplicates(
-    nfcap_flow_context_t *flow_context,
+int nxcap_flow_manager_remove_duplicates(
+    nxcap_flow_context_t *flow_context,
     int dup_time_window,
     int dup_packet_window
 );

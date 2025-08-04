@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: flow_manager.c
  *
  * Description: Flow-oriented network capture library
@@ -37,40 +37,40 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <nfcap/file.h>
+#include <nxcap/file.h>
 
-int nfcap_flow_manager_init(nfcap_flow_manager_t *flow_manager) {
+int nxcap_flow_manager_init(nxcap_flow_manager_t *flow_manager) {
     flow_manager->ht = hashtable_create(
         1 << 8, // 256 buckets
-        (hashtable_equals_func_t)nfcap_flow_key_equals,
-        (hashtable_hash_func_t)nfcap_flow_key_hash
+        (hashtable_equals_func_t)nxcap_flow_key_equals,
+        (hashtable_hash_func_t)nxcap_flow_key_hash
     );
-    flow_manager->ip_defrag = nfcap_ip_defrag_create();
+    flow_manager->ip_defrag = nxcap_ip_defrag_create();
 
     return 0;
 }
 
-int nfcap_flow_manager_destroy(nfcap_flow_manager_t *flow_manager) {
+int nxcap_flow_manager_destroy(nxcap_flow_manager_t *flow_manager) {
     hashtable_destroy(flow_manager->ht);
 
-    nfcap_flow_context_t *flow_context = flow_manager->first_created_flow;
-    nfcap_flow_context_t *next = NULL;
+    nxcap_flow_context_t *flow_context = flow_manager->first_created_flow;
+    nxcap_flow_context_t *next = NULL;
     while (flow_context != NULL) {
         next = flow_context->next;
-        nfcap_flow_context_destroy(flow_context);
+        nxcap_flow_context_destroy(flow_context);
         flow_context = next;
     }
 
-    nfcap_ip_defrag_destroy(flow_manager->ip_defrag);
+    nxcap_ip_defrag_destroy(flow_manager->ip_defrag);
 
     free(flow_manager);
 
     return 0;
 }
 
-static inline void nfcap_flow_manager_chain_flow(
-    nfcap_flow_manager_t *flow_manager, 
-    nfcap_flow_context_t *flow_context
+static inline void nxcap_flow_manager_chain_flow(
+    nxcap_flow_manager_t *flow_manager, 
+    nxcap_flow_context_t *flow_context
 ) {
     if (flow_manager->first_created_flow == NULL) {
         flow_manager->first_created_flow = flow_context;
@@ -82,27 +82,27 @@ static inline void nfcap_flow_manager_chain_flow(
     }
 }
 
-static int nfcap_flow_manager_create_flow(
-    nfcap_flow_manager_t *flow_manager, 
-    nfcap_flow_context_t **flow_context, 
-    nfcap_flow_key_t *key
+static int nxcap_flow_manager_create_flow(
+    nxcap_flow_manager_t *flow_manager, 
+    nxcap_flow_context_t **flow_context, 
+    nxcap_flow_key_t *key
 ) {
     int ret = 0;
 
-    ret = nfcap_flow_context_create(flow_context, key);
+    ret = nxcap_flow_context_create(flow_context, key);
     if (ret != 0) {
         fprintf(stderr, "[-] flow-manager: Failed to create new flow context\n");
         return ret; 
     }
 
     // Chain the flow context to the previous one
-    nfcap_flow_manager_chain_flow(flow_manager, *flow_context);
+    nxcap_flow_manager_chain_flow(flow_manager, *flow_context);
 
     return 0;
 }
 
-int nfcap_flow_manager_packet_handler(
-    nfcap_flow_manager_t *flow_manager, 
+int nxcap_flow_manager_packet_handler(
+    nxcap_flow_manager_t *flow_manager, 
     const struct pcap_pkthdr *header, 
     const u_char *packet
 ) {
@@ -111,11 +111,11 @@ int nfcap_flow_manager_packet_handler(
     clock_t start2, end2;
     METRICS_MEASURE_CPU_TIME_INIT;
 
-    nfcap_flow_key_t *key;
-    nfcap_pkthdr_t *pkt;
+    nxcap_flow_key_t *key;
+    nxcap_pkthdr_t *pkt;
 
     METRICS_MEASURE_CPU_TIME(
-        ret = nfcap_pkthdr_create(&pkt, flow_manager, header, packet, &key),
+        ret = nxcap_pkthdr_create(&pkt, flow_manager, header, packet, &key),
         flow_manager->metrics.cpu_time_pkthdr_create
     );
 
@@ -130,14 +130,14 @@ int nfcap_flow_manager_packet_handler(
     }
 
     METRICS_MEASURE_CPU_TIME(
-        hashtable_entry_t *entry = hashtable_get_entry(flow_manager->ht, key, sizeof(nfcap_flow_key_t)),
+        hashtable_entry_t *entry = hashtable_get_entry(flow_manager->ht, key, sizeof(nxcap_flow_key_t)),
         flow_manager->metrics.cpu_time_hashtable_lookup
     )
-    nfcap_flow_context_t *flow_context = entry->data;
+    nxcap_flow_context_t *flow_context = entry->data;
 
     if (entry->is_occupied == false) { // Flow does not exist, create it
-        ret = nfcap_flow_manager_create_flow(flow_manager, &flow_context, key);
-        nfcap_proto_tcp_connection_checker_init((tcp_connection_checker_t **)&flow_context->checker);
+        ret = nxcap_flow_manager_create_flow(flow_manager, &flow_context, key);
+        nxcap_proto_tcp_connection_checker_init((tcp_connection_checker_t **)&flow_context->checker);
         flow_manager->metrics.flow_count++;
         if (key->protocol == IPPROTO_TCP) {
             flow_manager->metrics.tcp_flow_count++;
@@ -157,7 +157,7 @@ int nfcap_flow_manager_packet_handler(
     }
 
     METRICS_MEASURE_CPU_TIME(
-        ret = nfcap_pkthdr_update(pkt, key, flow_context),
+        ret = nxcap_pkthdr_update(pkt, key, flow_context),
         flow_manager->metrics.cpu_time_pkthdr_update
     );
     if (ret != 0) {
@@ -168,7 +168,7 @@ int nfcap_flow_manager_packet_handler(
     // Update TCP SM
     if (key->protocol == IPPROTO_TCP) {
         METRICS_MEASURE_CPU_TIME(
-            ret = nfcap_proto_tcp_connection_checker_update((tcp_connection_checker_t *)flow_context->checker, pkt->flags, pkt->direction),
+            ret = nxcap_proto_tcp_connection_checker_update((tcp_connection_checker_t *)flow_context->checker, pkt->flags, pkt->direction),
             flow_manager->metrics.cpu_time_pkthdr_tcp_checker
         );
         flow_manager->metrics.tcp_checker_count++;
@@ -189,15 +189,15 @@ int nfcap_flow_manager_packet_handler(
     }
 
     start2 = clock();
-    nfcap_flow_context_update_state(flow_context);
-    if (flow_context->state == NFCAP_FLOW_STATE_CON_CLOSED && flow_context->expired == 0) {
+    nxcap_flow_context_update_state(flow_context);
+    if (flow_context->state == NXCAP_FLOW_STATE_CON_CLOSED && flow_context->expired == 0) {
         flow_context->expired = 1;
         flow_manager->metrics.flow_expired++;
     }
     end2 = clock();
     
     // Insert packet in flow
-    nfcap_flow_context_insert_packet(flow_context, pkt);
+    nxcap_flow_context_insert_packet(flow_context, pkt);
     
     flow_context->pkt_last_time = header->ts;
     flow_manager->packet_count++;
@@ -241,7 +241,7 @@ int nfcap_flow_manager_packet_handler(
     return 0;
 }
 
-static void nfcap_flow_manager_metrics_print(nfcap_flow_manager_t *flow_manager) {
+static void nxcap_flow_manager_metrics_print(nxcap_flow_manager_t *flow_manager) {
     printf("\n### Statistics ###\n\n");
 
     printf("Packets: %d total, %d tcp, %d udp, %d others\n", 
@@ -297,41 +297,41 @@ static void nfcap_flow_manager_metrics_print(nfcap_flow_manager_t *flow_manager)
         flow_manager->dup_packet_window);
     
     printf("\n");
-    printf("Export: %d flows, %lu bytes written to nfcap file\n", 
-        flow_manager->metrics.written_nfcap_flows, 
-        flow_manager->metrics.written_nfcap_size
+    printf("Export: %d flows, %lu bytes written to nxcap file\n", 
+        flow_manager->metrics.written_nxcap_flows, 
+        flow_manager->metrics.written_nxcap_size
     );
     printf("\n");
 }
 
-int nfcap_flow_manager_dump(nfcap_flow_manager_t *flow_manager) {
+int nxcap_flow_manager_dump(nxcap_flow_manager_t *flow_manager) {
     uint32_t size;
 
-    FILE *nfcap_file = NULL;
+    FILE *nxcap_file = NULL;
     size_t written_bytes = 0;
     if (flow_manager->output_filename != NULL) {
-        nfcap_file_create_new(flow_manager->output_filename, &nfcap_file);
+        nxcap_file_create_new(flow_manager->output_filename, &nxcap_file);
     }
 
-    nfcap_flow_context_t *flow_context = flow_manager->first_created_flow;
+    nxcap_flow_context_t *flow_context = flow_manager->first_created_flow;
     int flow_count = 0;
     while (flow_context != NULL) {
-        flow_manager->metrics.dup_packet_count += nfcap_flow_manager_remove_duplicates(
+        flow_manager->metrics.dup_packet_count += nxcap_flow_manager_remove_duplicates(
             flow_context, 
             flow_manager->dup_time_window, 
             flow_manager->dup_packet_window
         );
-        written_bytes += nfcap_flow_context_dump(flow_context, nfcap_file);
+        written_bytes += nxcap_flow_context_dump(flow_context, nxcap_file);
         flow_context = flow_context->next;
         flow_count++;
     }
 
-    if (nfcap_file != NULL) {
-        flow_manager->metrics.written_nfcap_size += written_bytes;
-        flow_manager->metrics.written_nfcap_flows += flow_count;
+    if (nxcap_file != NULL) {
+        flow_manager->metrics.written_nxcap_size += written_bytes;
+        flow_manager->metrics.written_nxcap_flows += flow_count;
     }
 
-    nfcap_flow_manager_metrics_print(flow_manager);
+    nxcap_flow_manager_metrics_print(flow_manager);
 
     return 0;
 }

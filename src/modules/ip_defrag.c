@@ -1,5 +1,5 @@
 /*
- * Project: nfcap
+ * Project: libnxcap
  * File: ip_defrag.c
  *
  * Description: Flow-oriented network capture library
@@ -31,9 +31,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-int nfcap_ip_defrag_key_equals(
-    const nfcap_ip_defrag_key_t *key1, 
-    const nfcap_ip_defrag_key_t *key2
+int nxcap_ip_defrag_key_equals(
+    const nxcap_ip_defrag_key_t *key1, 
+    const nxcap_ip_defrag_key_t *key2
 ) {
     return key1->src_ip == key2->src_ip &&
            key1->dst_ip == key2->dst_ip &&
@@ -41,8 +41,8 @@ int nfcap_ip_defrag_key_equals(
            key1->protocol == key2->protocol;
 }
 
-uint32_t nfcap_ip_defrag_key_hash(
-    const nfcap_ip_defrag_key_t *key, 
+uint32_t nxcap_ip_defrag_key_hash(
+    const nxcap_ip_defrag_key_t *key, 
     size_t key_size
 ) {
     // Simple hash function for the IP defragmentation key
@@ -54,15 +54,15 @@ uint32_t nfcap_ip_defrag_key_hash(
     return hash;
 }
 
-nfcap_ip_defrag_t *nfcap_ip_defrag_create() {
-    nfcap_ip_defrag_t *defrag = calloc(1, sizeof(nfcap_ip_defrag_t));
+nxcap_ip_defrag_t *nxcap_ip_defrag_create() {
+    nxcap_ip_defrag_t *defrag = calloc(1, sizeof(nxcap_ip_defrag_t));
     if (defrag == NULL) {
         return NULL; // Memory allocation failed
     }
 
     defrag->ht = hashtable_create(HASHTABLE_DEFAULT_CAPACITY, 
-                                  (hashtable_equals_func_t)nfcap_ip_defrag_key_equals, 
-                                  (hashtable_hash_func_t)nfcap_ip_defrag_key_hash);
+                                  (hashtable_equals_func_t)nxcap_ip_defrag_key_equals, 
+                                  (hashtable_hash_func_t)nxcap_ip_defrag_key_hash);
     if (defrag->ht == NULL) {
         fprintf(stderr, "[-]Error: Failed to create hashtable for IP defragmentation.\n");
         free(defrag);
@@ -72,7 +72,7 @@ nfcap_ip_defrag_t *nfcap_ip_defrag_create() {
     return defrag;
 }
 
-void nfcap_ip_defrag_destroy(nfcap_ip_defrag_t *defrag) {
+void nxcap_ip_defrag_destroy(nxcap_ip_defrag_t *defrag) {
     if (defrag == NULL) {
         return; // Nothing to destroy
     }
@@ -81,13 +81,13 @@ void nfcap_ip_defrag_destroy(nfcap_ip_defrag_t *defrag) {
     free(defrag);
 }
 
-nfcap_ip_defrag_key_t *nfcap_ip_defrag_key_create(
+nxcap_ip_defrag_key_t *nxcap_ip_defrag_key_create(
     uint32_t src_ip, 
     uint32_t dst_ip, 
     uint16_t id, 
     uint8_t protocol
 ) {
-    nfcap_ip_defrag_key_t *key = calloc(1, sizeof(nfcap_ip_defrag_key_t));
+    nxcap_ip_defrag_key_t *key = calloc(1, sizeof(nxcap_ip_defrag_key_t));
     if (key == NULL) {
         return NULL; // Memory allocation failed
     }
@@ -100,8 +100,8 @@ nfcap_ip_defrag_key_t *nfcap_ip_defrag_key_create(
     return key;
 }
 
-static void nfcap_ip_defrag_update_buffer(
-    nfcap_ip_defrag_ctx_t *defrag_ctx, 
+static void nxcap_ip_defrag_update_buffer(
+    nxcap_ip_defrag_ctx_t *defrag_ctx, 
     const uint8_t *data, 
     size_t data_len
 ) {
@@ -123,41 +123,41 @@ static void nfcap_ip_defrag_update_buffer(
     defrag_ctx->total_length += data_len; // Update the total length
 }
 
-static nfcap_ip_defrag_ctx_t *nfcap_ip_defrag_ctx_create() {
-    nfcap_ip_defrag_ctx_t *ctx = calloc(1, sizeof(nfcap_ip_defrag_ctx_t));
+static nxcap_ip_defrag_ctx_t *nxcap_ip_defrag_ctx_create() {
+    nxcap_ip_defrag_ctx_t *ctx = calloc(1, sizeof(nxcap_ip_defrag_ctx_t));
     if (ctx == NULL) {
         fprintf(stderr, "[-]Error: Memory allocation failed for IP defragmentation context.\n");
         return NULL; // Memory allocation failed
     }
 
-    ctx->buffer = calloc(NFCAP_IP_DEFRAG_CTX_BUFFER_SIZE, sizeof(uint8_t)); // Initial buffer size of 1024 bytes
+    ctx->buffer = calloc(NXCAP_IP_DEFRAG_CTX_BUFFER_SIZE, sizeof(uint8_t)); // Initial buffer size of 1024 bytes
     if (ctx->buffer == NULL) {
         fprintf(stderr, "[-]Error: Memory allocation failed for buffer in IP defragmentation context.\n");
         free(ctx);
         return NULL; // Memory allocation failed
     }
-    ctx->buffer_len = NFCAP_IP_DEFRAG_CTX_BUFFER_SIZE; // Set initial buffer length
+    ctx->buffer_len = NXCAP_IP_DEFRAG_CTX_BUFFER_SIZE; // Set initial buffer length
 
     return ctx;
 }
 
-static inline void nfcap_ip_defrag_ctx_destroy(nfcap_ip_defrag_ctx_t *ctx) {
+static inline void nxcap_ip_defrag_ctx_destroy(nxcap_ip_defrag_ctx_t *ctx) {
     free(ctx->buffer); // Free the buffer used for reassembly
     free(ctx); // Free the memory allocated for the key
 }
 
-int nfcap_ip_defrag_packet_handler(
-    nfcap_ip_defrag_t *defrag, 
-    nfcap_ip_defrag_key_t *key,
-    nfcap_flow_key_t **flow_key,
-    nfcap_pkthdr_t **pkthdr,
+int nxcap_ip_defrag_packet_handler(
+    nxcap_ip_defrag_t *defrag, 
+    nxcap_ip_defrag_key_t *key,
+    nxcap_flow_key_t **flow_key,
+    nxcap_pkthdr_t **pkthdr,
     uint8_t *data,
     size_t data_len
 ) {
-    hashtable_entry_t *entry = hashtable_get_entry(defrag->ht, key, sizeof(nfcap_ip_defrag_key_t));
+    hashtable_entry_t *entry = hashtable_get_entry(defrag->ht, key, sizeof(nxcap_ip_defrag_key_t));
 
     if (!entry->is_occupied && (*pkthdr)->frag_offset == 0) { // Create a new entry for the first fragment
-        nfcap_ip_defrag_ctx_t *new_defrag_ctx = nfcap_ip_defrag_ctx_create();
+        nxcap_ip_defrag_ctx_t *new_defrag_ctx = nxcap_ip_defrag_ctx_create();
         if (new_defrag_ctx == NULL) {
             return -1; // Memory allocation failed
         }
@@ -166,7 +166,7 @@ int nfcap_ip_defrag_packet_handler(
         new_defrag_ctx->pkthdr = *pkthdr; // Set the packet header
 
         // Update the buffer with the first fragment
-        nfcap_ip_defrag_update_buffer(new_defrag_ctx, data, data_len);
+        nxcap_ip_defrag_update_buffer(new_defrag_ctx, data, data_len);
 
         // Set the entry in the hashtable
         entry->key = new_defrag_ctx->key; 
@@ -175,16 +175,16 @@ int nfcap_ip_defrag_packet_handler(
         defrag->ht->size++;
 
     } else if (entry->is_occupied) { // Existing entry found, update the fragment
-        nfcap_ip_defrag_ctx_t *defrag_ctx = (nfcap_ip_defrag_ctx_t *)entry->data;
+        nxcap_ip_defrag_ctx_t *defrag_ctx = (nxcap_ip_defrag_ctx_t *)entry->data;
         size_t fragment_payload_len = data_len - sizeof(ipv4_hdr_t); // Exclude the IPv4 header length
 
         // Update the buffer with the fragment data
-        nfcap_ip_defrag_update_buffer(defrag_ctx, data + sizeof(ipv4_hdr_t), fragment_payload_len);
+        nxcap_ip_defrag_update_buffer(defrag_ctx, data + sizeof(ipv4_hdr_t), fragment_payload_len);
 
         free(*flow_key); // Free the created flow key
         *flow_key = defrag_ctx->flow_key; // Retrieve the flow key from the defrag context
 
-        nfcap_pkthdr_t *retrieved_pkthdr = defrag_ctx->pkthdr;
+        nxcap_pkthdr_t *retrieved_pkthdr = defrag_ctx->pkthdr;
         if (*pkthdr != NULL) {
             retrieved_pkthdr->more_fragments = (*pkthdr)->more_fragments; // Preserve the more fragments flag
             retrieved_pkthdr->frag_id = (*pkthdr)->frag_id; // Preserve
@@ -200,34 +200,34 @@ int nfcap_ip_defrag_packet_handler(
     return 0; // Indicate that the fragment was added successfully
 }
 
-static void nfcap_ip_defrag_compute_hash(
-    nfcap_ip_defrag_ctx_t *defrag_ctx
+static void nxcap_ip_defrag_compute_hash(
+    nxcap_ip_defrag_ctx_t *defrag_ctx
 ) {
     // Replace the IPv4 total length in the header with the total length of the reassembled packet
     ipv4_hdr_t *ipv4_hdr = (ipv4_hdr_t *)defrag_ctx->buffer;
     ipv4_hdr->tot_len = htons(defrag_ctx->total_length); // Update the total length in the IPv4 header
 
     // Compute the hash of the reassembled packet
-    if (nfcap_utils_hash(defrag_ctx->buffer, 0, defrag_ctx->total_length, defrag_ctx->pkthdr->hash) != 0) {
+    if (nxcap_utils_hash(defrag_ctx->buffer, 0, defrag_ctx->total_length, defrag_ctx->pkthdr->hash) != 0) {
         fprintf(stderr, "[-]Error: Failed to compute hash for reassembled packet.\n");
     }
 }
 
-int nfcap_ip_defrag_reassemble(
-    nfcap_ip_defrag_t *defrag, 
-    nfcap_ip_defrag_key_t *key
+int nxcap_ip_defrag_reassemble(
+    nxcap_ip_defrag_t *defrag, 
+    nxcap_ip_defrag_key_t *key
 ) {
     // Get the fragment ctx from the hashtable
-    hashtable_entry_t *entry = hashtable_get_entry(defrag->ht, key, sizeof(nfcap_ip_defrag_key_t));
+    hashtable_entry_t *entry = hashtable_get_entry(defrag->ht, key, sizeof(nxcap_ip_defrag_key_t));
     
     if (!entry->is_occupied) {
         return -1; // No fragments found for the key
     }
 
-    nfcap_ip_defrag_ctx_t *defrag_ctx = (nfcap_ip_defrag_ctx_t *)entry->data;
+    nxcap_ip_defrag_ctx_t *defrag_ctx = (nxcap_ip_defrag_ctx_t *)entry->data;
     
-    nfcap_ip_defrag_compute_hash(defrag_ctx); // Compute the hash of the reassembled packet
-    nfcap_ip_defrag_ctx_destroy(defrag_ctx); // Destroy the defrag context after reassembly
+    nxcap_ip_defrag_compute_hash(defrag_ctx); // Compute the hash of the reassembled packet
+    nxcap_ip_defrag_ctx_destroy(defrag_ctx); // Destroy the defrag context after reassembly
 
     // remove the entry from the hashtable
     entry->is_occupied = false; // Mark the entry as unoccupied

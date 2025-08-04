@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: dlt_ssl.c
  *
  * Description: Flow-oriented network capture library
@@ -29,7 +29,7 @@
 
 #include <stdio.h>
 
-dlt_ssl_hdr_t* nfcap_proto_unpack_dlt_ssl(const u_char *packet, size_t *offset) {
+dlt_ssl_hdr_t* nxcap_proto_unpack_dlt_ssl(const u_char *packet, size_t *offset) {
     dlt_ssl_hdr_t *dlt_ssl_hdr;
     dlt_ssl_hdr = (dlt_ssl_hdr_t *) (packet);// + *offset);
     

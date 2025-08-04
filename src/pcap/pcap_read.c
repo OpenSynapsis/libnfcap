@@ -1,5 +1,5 @@
 /*
- * Project: libnfcap
+ * Project: libnxcap
  * File: pcap_read.c
  *
  * Description: Flow-oriented network capture library
@@ -26,7 +26,7 @@
 #include <pcap/pcap_read.h>
 #include <pcap/packet_handler.h>
 #include <core/flow_manager/flow_manager.h>
-#include <nfcap_types.h>
+#include <nxcap_types.h>
 
 #include <stdlib.h>
 
@@ -55,8 +55,8 @@ int read_pcap_file(char* filename, char* output_filename, int dup_time_window, i
         return -1;
     }
 
-    nfcap_flow_manager_t *flow_manager = calloc(1, sizeof(nfcap_flow_manager_t));
-    nfcap_flow_manager_init(flow_manager);
+    nxcap_flow_manager_t *flow_manager = calloc(1, sizeof(nxcap_flow_manager_t));
+    nxcap_flow_manager_init(flow_manager);
     flow_manager->datalink_type = datalink;
     flow_manager->metrics.total_bytes = file_size;
     flow_manager->input_file = file;
@@ -77,8 +77,8 @@ int read_pcap_file(char* filename, char* output_filename, int dup_time_window, i
         pcap_perror(pcap, "pcap_dispatch");
     }
 
-    nfcap_flow_manager_dump(flow_manager);
-    nfcap_flow_manager_destroy(flow_manager);
+    nxcap_flow_manager_dump(flow_manager);
+    nxcap_flow_manager_destroy(flow_manager);
 
     pcap_close(pcap);
 
